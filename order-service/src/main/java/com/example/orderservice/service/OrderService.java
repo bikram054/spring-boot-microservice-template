@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Map;
@@ -25,7 +25,7 @@ public class OrderService {
     private OrderRepository orderRepository;
     
     @Autowired
-    private RestClient restClient;
+    private RestTemplate restTemplate;
     
     @Value("${user.service.url}")
     private String userServiceUrl;
@@ -59,10 +59,9 @@ public class OrderService {
         logger.info("Creating order for userId={} productId={} quantity={}",
             orderRequest.userId(), orderRequest.productId(), orderRequest.quantity());
         try {
-            Object product = restClient.get()
-                .uri(productServiceUrl + "/api/products/" + orderRequest.productId())
-                .retrieve()
-                .body(Object.class);
+            Object product = restTemplate.getForObject(
+                productServiceUrl + "/api/products/" + orderRequest.productId(),
+                Object.class);
 
             if (!(product instanceof Map<?, ?> productMap)) {
                 logger.error("Invalid product response format for productId={}", orderRequest.productId());
@@ -106,10 +105,9 @@ public class OrderService {
         String productName = "Unknown";
         
         try {
-            Map<String, Object> user = restClient.get()
-                .uri(userServiceUrl + "/api/users/" + order.getUserId())
-                .retrieve()
-                .body(Map.class);
+            Map<String, Object> user = restTemplate.getForObject(
+                userServiceUrl + "/api/users/" + order.getUserId(),
+                Map.class);
             if (user != null && user.get("name") instanceof String name) {
                 userName = name;
             }
@@ -118,10 +116,9 @@ public class OrderService {
         }
         
         try {
-            Map<String, Object> product = restClient.get()
-                .uri(productServiceUrl + "/api/products/" + order.getProductId())
-                .retrieve()
-                .body(Map.class);
+            Map<String, Object> product = restTemplate.getForObject(
+                productServiceUrl + "/api/products/" + order.getProductId(),
+                Map.class);
             if (product != null && product.get("name") instanceof String name) {
                 productName = name;
             }
