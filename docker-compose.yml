@@ -57,7 +57,10 @@ services:
       - eureka-server
 
   eureka-server:
-    image: steeltoeoss/eureka-server:latest
+    # image: steeltoeoss/eureka-server:latest
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
     container_name: eureka-server
     ports:
       - "8761:8761"
