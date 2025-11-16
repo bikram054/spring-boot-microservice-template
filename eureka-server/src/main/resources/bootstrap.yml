@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: eureka-server
+  cloud:
+    config:
+      uri: http://config-server:8888
+      fail-fast: true
+server:
+  port: 8761

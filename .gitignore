@@ -35,3 +35,11 @@ logs/
 
 # Docker
 docker-compose.override.yml
+
+# Performance Tests
+performance-tests/results/
+performance-tests/*.jtl
+performance-tests/*.log
+
+# Config Repository
+config-repo/
