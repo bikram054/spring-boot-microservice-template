@@ -34,12 +34,6 @@
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
         </dependency>
 
-        <!-- Redis for rate limiting -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
-        </dependency>
-
         <!-- Security for authentication -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

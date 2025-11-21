@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-repo
+  namespace: microservices
+data:
+  application.properties: |
+    server.port=8888
+    spring.cloud.config.server.native.search-locations=file:/config-repo
+    spring.profiles.active=native
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: config-server
+  namespace: microservices
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: config-server
+  template:
+    metadata:
+      labels:
+        app: config-server
+    spec:
+      containers:
+      - name: config-server
+        image: config-server:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8888
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "native"
+        - name: SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS
+          value: "file:/config-repo"
+        volumeMounts:
+        - name: config-repo
+          mountPath: /config-repo
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8888
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8888
+          initialDelaySeconds: 20
+          periodSeconds: 5
+      volumes:
+      - name: config-repo
+        configMap:
+          name: config-repo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: config-server
+  namespace: microservices
+spec:
+  selector:
+    app: config-server
+  ports:
+  - port: 8888
+    targetPort: 8888

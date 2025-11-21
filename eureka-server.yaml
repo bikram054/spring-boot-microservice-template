@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eureka-server
+  namespace: microservices
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eureka-server
+  template:
+    metadata:
+      labels:
+        app: eureka-server
+    spec:
+      containers:
+      - name: eureka-server
+        image: eureka-server:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8761
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: EUREKA_SERVER_ENABLE_SELF_PRESERVATION
+          value: "false"
+        - name: EUREKA_SERVER_RENEWAL_PERCENT_THRESHOLD
+          value: "0.49"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8761
+          initialDelaySeconds: 40
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8761
+          initialDelaySeconds: 30
+          periodSeconds: 5
+      initContainers:
+      - name: wait-for-config
+        image: busybox:1.35
+        command: ['sh', '-c', 'until nc -z config-server 8888; do sleep 2; done']
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eureka-server
+  namespace: microservices
+spec:
+  selector:
+    app: eureka-server
+  ports:
+  - port: 8761
+    targetPort: 8761
+  type: NodePort
