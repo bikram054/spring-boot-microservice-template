@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,41 +18,44 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
-    
-    public List<User> getAllUsers() {
-        logger.debug("Fetching all users");
-        List<User> list = userRepository.findAll();
-        logger.debug("Fetched {} users", list.size());
-        return list;
+
+    public Page<User> getAllUsers(Pageable pageable) {
+        logger.debug("Fetching users with pagination");
+        Page<User> page = userRepository.findAll(pageable);
+        logger.debug("Fetched {} users", page.getNumberOfElements());
+        return page;
     }
-    
+
     public Optional<User> getUserById(Long id) {
         if (id == null) {
             return Optional.empty();
         }
         logger.debug("Fetching user by id={}", id);
         Optional<User> result = userRepository.findById(id);
-        if (result.isPresent()) logger.debug("Found user id={}", id);
-        else logger.debug("User id={} not found", id);
+        if (result.isPresent())
+            logger.debug("Found user id={}", id);
+        else
+            logger.debug("User id={} not found", id);
         return result;
     }
-    
+
     public User createUser(User user) {
         logger.info("Creating user name={} email={}", user.getName(), user.getEmail());
         User saved = userRepository.save(user);
         logger.info("Created user id={}", saved.getId());
         return saved;
     }
-    
+
     public User updateUser(Long id, User userDetails) {
         if (id == null) {
             throw new IllegalArgumentException("User id cannot be null");
         }
         logger.info("Updating user id={}", id);
         User user = userRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Only update fields that are provided (non-null) to avoid violating NOT NULL constraints
+        // Only update fields that are provided (non-null) to avoid violating NOT NULL
+        // constraints
         if (userDetails.getName() != null) {
             user.setName(userDetails.getName());
         }
@@ -84,7 +89,7 @@ public class UserService {
         }
         logger.info("Replacing user id={}", id);
         User user = userRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Full replace - required fields must be present
         if (userDetails.getName() == null || userDetails.getName().isBlank()) {
@@ -102,7 +107,7 @@ public class UserService {
         logger.info("Replaced user id={}", saved.getId());
         return saved;
     }
-    
+
     public void deleteUser(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("User id cannot be null");

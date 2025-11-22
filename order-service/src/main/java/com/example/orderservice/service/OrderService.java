@@ -9,10 +9,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,32 +26,30 @@ public class OrderService {
     private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
     @Autowired
     private OrderRepository orderRepository;
-    
+
     @Autowired
     private RestTemplate restTemplate;
-    
+
     @Value("${user.service.url}")
     private String userServiceUrl;
-    
+
     @Value("${product.service.url}")
     private String productServiceUrl;
-    
-    public List<OrderResponse> getAllOrders() {
-        logger.debug("Fetching all orders");
-        List<OrderResponse> responses = orderRepository.findAll().stream()
-            .map(this::mapToOrderResponse)
-            .collect(Collectors.toList());
-        logger.debug("Fetched {} orders", responses.size());
-        return responses;
+
+    public Page<OrderResponse> getAllOrders(Pageable pageable) {
+        logger.debug("Fetching orders with pagination");
+        Page<Order> page = orderRepository.findAll(pageable);
+        logger.debug("Fetched {} orders", page.getNumberOfElements());
+        return page.map(this::mapToOrderResponse);
     }
-    
+
     public Optional<OrderResponse> getOrderById(Long id) {
         if (id == null) {
             return Optional.empty();
         }
         logger.debug("Fetching order by id={}", id);
         Optional<OrderResponse> result = orderRepository.findById(id)
-            .map(this::mapToOrderResponse);
+                .map(this::mapToOrderResponse);
         if (result.isPresent()) {
             logger.debug("Found order id={}", id);
         } else {
@@ -56,15 +57,15 @@ public class OrderService {
         }
         return result;
     }
-    
+
     @CircuitBreaker(name = "productService", fallbackMethod = "createOrderFallback")
     public OrderResponse createOrder(OrderRequest orderRequest) {
         logger.info("Creating order for userId={} productId={} quantity={}",
-            orderRequest.userId(), orderRequest.productId(), orderRequest.quantity());
+                orderRequest.userId(), orderRequest.productId(), orderRequest.quantity());
         try {
             Object product = restTemplate.getForObject(
-                productServiceUrl + "/api/products/" + orderRequest.productId(),
-                Object.class);
+                    productServiceUrl + "/api/products/" + orderRequest.productId(),
+                    Object.class);
 
             if (!(product instanceof Map<?, ?> productMap)) {
                 logger.error("Invalid product response format for productId={}", orderRequest.productId());
@@ -72,7 +73,7 @@ public class OrderService {
             }
 
             Double price = ((Number) productMap.get("price")).doubleValue();
-            Double totalAmount = price * orderRequest.quantity();
+            BigDecimal totalAmount = BigDecimal.valueOf(price).multiply(BigDecimal.valueOf(orderRequest.quantity()));
 
             Order order = new Order();
             order.setUserId(orderRequest.userId());
@@ -91,13 +92,13 @@ public class OrderService {
             throw e;
         }
     }
-    
+
     public OrderResponse createOrderFallback(OrderRequest orderRequest, Exception ex) {
         logger.warn("createOrderFallback triggered for userId={} productId={} due to: {}",
-            orderRequest.userId(), orderRequest.productId(), ex.toString());
+                orderRequest.userId(), orderRequest.productId(), ex.toString());
         throw new IllegalArgumentException("Product service is currently unavailable. Please try again later.");
     }
-    
+
     public void deleteOrder(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("Order id cannot be null");
@@ -105,45 +106,44 @@ public class OrderService {
         logger.info("Deleting order id={}", id);
         orderRepository.deleteById(id);
     }
-    
+
     private OrderResponse mapToOrderResponse(Order order) {
         String userName = "Unknown";
         String productName = "Unknown";
-        
+
         try {
             @SuppressWarnings("unchecked")
             Map<String, Object> user = restTemplate.getForObject(
-                userServiceUrl + "/api/users/" + order.getUserId(),
-                Map.class);
+                    userServiceUrl + "/api/users/" + order.getUserId(),
+                    Map.class);
             if (user != null && user.get("name") instanceof String name) {
                 userName = name;
             }
         } catch (Exception e) {
             logger.debug("Could not fetch user name for userId={}: {}", order.getUserId(), e.getMessage());
         }
-        
+
         try {
             @SuppressWarnings("unchecked")
             Map<String, Object> product = restTemplate.getForObject(
-                productServiceUrl + "/api/products/" + order.getProductId(),
-                Map.class);
+                    productServiceUrl + "/api/products/" + order.getProductId(),
+                    Map.class);
             if (product != null && product.get("name") instanceof String name) {
                 productName = name;
             }
         } catch (Exception e) {
             logger.debug("Could not fetch product name for productId={}: {}", order.getProductId(), e.getMessage());
         }
-        
+
         return new OrderResponse(
-            order.getId(),
-            order.getUserId(),
-            userName,
-            order.getProductId(),
-            productName,
-            order.getQuantity(),
-            order.getTotalAmount(),
-            order.getStatus(),
-            order.getOrderDate()
-        );
+                order.getId(),
+                order.getUserId(),
+                userName,
+                order.getProductId(),
+                productName,
+                order.getQuantity(),
+                order.getTotalAmount(),
+                order.getStatus(),
+                order.getOrderDate());
     }
 }

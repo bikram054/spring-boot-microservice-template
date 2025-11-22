@@ -1,5 +1,7 @@
 spring:
   application:
     name: admin-server
+  main:
+    banner-mode: off
   config:
     import: optional:configserver:http://config-server:8888

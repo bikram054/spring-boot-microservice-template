@@ -1,6 +1,8 @@
 spring:
   application:
     name: product-service
+  main:
+    banner-mode: off
   cloud:
     config:
       enabled: false  # Disable config server for local dev

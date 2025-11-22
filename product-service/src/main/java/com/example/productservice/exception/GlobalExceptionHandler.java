@@ -1,4 +1,4 @@
-package com.example.orderservice.exception;
+package com.example.productservice.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -6,7 +6,6 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,13 +29,6 @@ public class GlobalExceptionHandler {
         Map<String, String> error = new HashMap<>();
         error.put("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-    }
-
-    @ExceptionHandler(HttpClientErrorException.class)
-    public ResponseEntity<Map<String, String>> handleHttpClientErrorException(HttpClientErrorException ex) {
-        Map<String, String> error = new HashMap<>();
-        error.put("error", "External service error: " + ex.getMessage());
-        return ResponseEntity.status(ex.getStatusCode()).body(error);
     }
 
     @ExceptionHandler(RuntimeException.class)

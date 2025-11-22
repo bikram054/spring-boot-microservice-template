@@ -1,6 +1,8 @@
 spring:
   application:
     name: admin-server
+  main:
+    banner-mode: off
   cloud:
     config:
       enabled: false  # Disable config server for local dev
@@ -31,3 +33,4 @@ logging:
       max-history: 5
   level:
     de.codecentric.boot.admin: DEBUG
+    de.codecentric.boot.admin.server.services.StatusUpdater: INFO
