@@ -34,9 +34,15 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,logfile
 
 logging:
+  file:
+    name: logs/user-service.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 5
   level:
     com.example.userservice: DEBUG
     org.springframework.web: INFO

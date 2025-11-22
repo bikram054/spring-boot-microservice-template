@@ -34,8 +34,14 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,gateway
+        include: health,info,gateway,logfile
 
 logging:
+  file:
+    name: logs/gateway-server.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 5
   level:
     org.springframework.cloud.gateway: DEBUG

@@ -23,5 +23,11 @@ management:
         include: '*'
 
 logging:
+  file:
+    name: logs/admin-server.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 5
   level:
     de.codecentric.boot.admin: DEBUG
