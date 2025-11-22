@@ -31,11 +31,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{gatewayBaseUrl}}/api/orders",
+              "raw": "{{gatewayBaseUrl}}/order-service/api/orders",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
               "path": [
+                "order-service",
                 "api",
                 "orders"
               ]
@@ -64,11 +65,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{gatewayBaseUrl}}/api/orders/{{orderId}}",
+              "raw": "{{gatewayBaseUrl}}/order-service/api/orders/{{orderId}}",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
               "path": [
+                "order-service",
                 "api",
                 "orders",
                 "{{orderId}}"
@@ -109,11 +111,12 @@
               "raw": "{\n  \"userId\": 1,\n  \"productId\": 1,\n  \"quantity\": 2\n}"
             },
             "url": {
-              "raw": "{{gatewayBaseUrl}}/api/orders",
+              "raw": "{{gatewayBaseUrl}}/order-service/api/orders",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
               "path": [
+                "order-service",
                 "api",
                 "orders"
               ]
@@ -144,11 +147,12 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{gatewayBaseUrl}}/api/orders/{{orderIdToDelete}}",
+              "raw": "{{gatewayBaseUrl}}/order-service/api/orders/{{orderIdToDelete}}",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
               "path": [
+                "order-service",
                 "api",
                 "orders",
                 "{{orderIdToDelete}}"
@@ -179,11 +183,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{gatewayBaseUrl}}/api/products",
+              "raw": "{{gatewayBaseUrl}}/product-service/api/products",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
               "path": [
+                "product-service",
                 "api",
                 "products"
               ]
@@ -212,11 +217,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{gatewayBaseUrl}}/api/products/{{productId}}",
+              "raw": "{{gatewayBaseUrl}}/product-service/api/products/{{productId}}",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
               "path": [
+                "product-service",
                 "api",
                 "products",
                 "{{productId}}"
@@ -257,11 +263,12 @@
               "raw": "{\n  \"name\": \"Example product\",\n  \"price\": 9.99,\n  \"stock\": 100\n}"
             },
             "url": {
-              "raw": "{{gatewayBaseUrl}}/api/products",
+              "raw": "{{gatewayBaseUrl}}/product-service/api/products",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
               "path": [
+                "product-service",
                 "api",
                 "products"
               ]
@@ -301,11 +308,12 @@
               "raw": "{\n  \"name\": \"Updated product\",\n  \"price\": 12.99,\n  \"stock\": 50\n}"
             },
             "url": {
-              "raw": "{{gatewayBaseUrl}}/api/products/{{productIdToUpdate}}",
+              "raw": "{{gatewayBaseUrl}}/product-service/api/products/{{productIdToUpdate}}",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
               "path": [
+                "product-service",
                 "api",
                 "products",
                 "{{productIdToUpdate}}"
@@ -331,11 +339,12 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{gatewayBaseUrl}}/api/products/{{productIdToDelete}}",
+              "raw": "{{gatewayBaseUrl}}/product-service/api/products/{{productIdToDelete}}",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
               "path": [
+                "product-service",
                 "api",
                 "products",
                 "{{productIdToDelete}}"
@@ -366,11 +375,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{gatewayBaseUrl}}/api/users",
+              "raw": "{{gatewayBaseUrl}}/user-service/api/users",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
               "path": [
+                "user-service",
                 "api",
                 "users"
               ]
@@ -399,11 +409,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{gatewayBaseUrl}}/api/users/{{userId}}",
+              "raw": "{{gatewayBaseUrl}}/user-service/api/users/{{userId}}",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
               "path": [
+                "user-service",
                 "api",
                 "users",
                 "{{userId}}"
@@ -444,11 +455,12 @@
               "raw": "{\n  \"name\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"phone\": \"555-1234\"\n}"
             },
             "url": {
-              "raw": "{{gatewayBaseUrl}}/api/users",
+              "raw": "{{gatewayBaseUrl}}/user-service/api/users",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
               "path": [
+                "user-service",
                 "api",
                 "users"
               ]
@@ -488,11 +500,12 @@
               "raw": "{\n  \"username\": \"updateduser\",\n  \"email\": \"updated@example.com\"\n}"
             },
             "url": {
-              "raw": "{{gatewayBaseUrl}}/api/users/{{userIdToUpdate}}",
+              "raw": "{{gatewayBaseUrl}}/user-service/api/users/{{userIdToUpdate}}",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
               "path": [
+                "user-service",
                 "api",
                 "users",
                 "{{userIdToUpdate}}"
@@ -518,11 +531,12 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{gatewayBaseUrl}}/api/users/{{userIdToDelete}}",
+              "raw": "{{gatewayBaseUrl}}/user-service/api/users/{{userIdToDelete}}",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
               "path": [
+                "user-service",
                 "api",
                 "users",
                 "{{userIdToDelete}}"
