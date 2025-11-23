@@ -64,7 +64,7 @@ public class OrderService {
                 orderRequest.userId(), orderRequest.productId(), orderRequest.quantity());
         try {
             Object product = restTemplate.getForObject(
-                    productServiceUrl + "/api/products/" + orderRequest.productId(),
+                    productServiceUrl + "/products/" + orderRequest.productId(),
                     Object.class);
 
             if (!(product instanceof Map<?, ?> productMap)) {
@@ -114,7 +114,7 @@ public class OrderService {
         try {
             @SuppressWarnings("unchecked")
             Map<String, Object> user = restTemplate.getForObject(
-                    userServiceUrl + "/api/users/" + order.getUserId(),
+                    userServiceUrl + "/users/" + order.getUserId(),
                     Map.class);
             if (user != null && user.get("name") instanceof String name) {
                 userName = name;
@@ -126,7 +126,7 @@ public class OrderService {
         try {
             @SuppressWarnings("unchecked")
             Map<String, Object> product = restTemplate.getForObject(
-                    productServiceUrl + "/api/products/" + order.getProductId(),
+                    productServiceUrl + "/products/" + order.getProductId(),
                     Map.class);
             if (product != null && product.get("name") instanceof String name) {
                 productName = name;

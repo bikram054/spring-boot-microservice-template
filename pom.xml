@@ -19,7 +19,6 @@
     <name>microservices-parent</name>
     
     <modules>
-        <module>config-server</module>
         <module>eureka-server</module>
         <module>gateway-server</module>
         <module>user-service</module>

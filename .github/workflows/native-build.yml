@@ -17,7 +17,7 @@ jobs:
       packages: write
     strategy:
       matrix:
-        service: [config-server, eureka-server, gateway-server, user-service, product-service, order-service]
+        service: [eureka-server, gateway-server, user-service, product-service, order-service]
     steps:
     - uses: actions/checkout@v4
     
@@ -52,7 +52,7 @@ jobs:
       packages: write
     strategy:
       matrix:
-        service: [config-server, eureka-server, gateway-server, user-service, product-service, order-service]
+        service: [eureka-server, gateway-server, user-service, product-service, order-service]
     steps:
       - name: Delete old package versions
         uses: actions/delete-package-versions@v5

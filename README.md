@@ -6,7 +6,6 @@ Run your Java microservices as an application in the Kubernetes cluster.
 
 ```
 microservices namespace
-├── config-server (port 8888)
 ├── eureka-server (port 8761)
 ├── gateway-server (port 9090) ← Entry point
 ├── user-service (port 8081)
@@ -34,7 +33,7 @@ microservices/
 cd /home/samanta/ms
 
 # Build all service images
-docker build -t config-server:latest ./config-server
+
 docker build -t eureka-server:latest ./eureka-server
 docker build -t gateway-server:latest ./gateway-server
 docker build -t user-service:latest ./user-service
@@ -46,7 +45,7 @@ docker build -t order-service:latest ./order-service
 ```bash
 # Ensure images are ARM-compatible
 # Use buildx for multi-platform builds
-docker buildx build --platform linux/arm64 -t config-server:latest ./config-server
+
 ```
 
 ### Step 2: Push Images to Registry
@@ -57,12 +56,12 @@ docker buildx build --platform linux/arm64 -t config-server:latest ./config-serv
 docker run -d -p 5000:5000 --restart always --name registry registry:2
 
 # Tag images for local registry
-docker tag config-server:latest localhost:5000/config-server:latest
+
 docker tag eureka-server:latest localhost:5000/eureka-server:latest
 # ... tag all services
 
 # Push to local registry
-docker push localhost:5000/config-server:latest
+
 docker push localhost:5000/eureka-server:latest
 # ... push all services
 ```
@@ -70,13 +69,13 @@ docker push localhost:5000/eureka-server:latest
 **Option B: Docker Hub**
 ```bash
 # Tag for Docker Hub
-docker tag config-server:latest <username>/config-server:latest
+
 docker tag eureka-server:latest <username>/eureka-server:latest
 # ... tag all services
 
 # Login and push
 docker login
-docker push <username>/config-server:latest
+
 docker push <username>/eureka-server:latest
 # ... push all services
 ```
@@ -98,8 +97,7 @@ metadata:
   name: microservices-config
   namespace: microservices
 data:
-  # Config Server
-  config.server.port: "8888"
+
   
   # Eureka Server
   eureka.instance.hostname: "eureka-server"
@@ -108,65 +106,7 @@ data:
   # Services
   spring.application.name: "microservices"
 
----
-# Config Server
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: config-server
-  namespace: microservices
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: config-server
-  template:
-    metadata:
-      labels:
-        app: config-server
-    spec:
-      containers:
-      - name: config-server
-        image: localhost:5000/config-server:latest  # Change if using Docker Hub
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8888
-        env:
-        - name: JAVA_OPTS
-          value: "-Xmx256m -Xms128m"  # Optimize for Raspberry Pi
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "200m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8888
-          initialDelaySeconds: 60
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8888
-          initialDelaySeconds: 30
-          periodSeconds: 5
 
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: config-server
-  namespace: microservices
-spec:
-  selector:
-    app: config-server
-  ports:
-  - port: 8888
-    targetPort: 8888
-  type: ClusterIP
 
 ---
 # Eureka Server

@@ -1,7 +1,35 @@
+server:
+  port: 8081
+
 spring:
   application:
     name: user-service
   main:
     banner-mode: off
-  config:
-    import: optional:configserver:http://config-server:8888
+  datasource:
+    url: jdbc:h2:mem:userdb
+    username: sa
+    password:
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: none
+  h2:
+    console:
+      enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
