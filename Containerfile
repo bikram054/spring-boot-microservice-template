@@ -1,8 +1,9 @@
+FROM ghcr.io/graalvm/native-image-community:21 AS builder
 ARG SERVICE_NAME
 ARG PORT
-
-FROM ghcr.io/graalvm/native-image-community:21 AS builder
 WORKDIR /app
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
 COPY . .
 RUN chmod +x mvnw
 RUN ./mvnw -Pnative native:compile -pl ${SERVICE_NAME} -DskipTests
