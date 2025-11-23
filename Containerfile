@@ -6,7 +6,8 @@ ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 COPY . .
 RUN chmod +x mvnw
-RUN ./mvnw -Pnative native:compile -pl ${SERVICE_NAME} -DskipTests
+RUN --mount=type=cache,target=/root/.m2/repository \
+    ./mvnw -Pnative native:compile -pl ${SERVICE_NAME} -DskipTests
 
 FROM ubuntu:noble
 ARG SERVICE_NAME

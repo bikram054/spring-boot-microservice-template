@@ -182,6 +182,13 @@ done
 - **Memory Usage**: ~50-100MB vs ~200-400MB (JVM)
 - **Image Size**: ~100-150MB vs ~300-500MB (JVM)
 
+## ⚡ Build Performance Improvements
+
+- **Parallel Maven Builds**: Uses Maven's parallel build mode (`-T 1C`) for faster multi-service compilation
+- **CI Pipeline Caching**: GitHub Actions caches Maven dependencies and Docker layers for faster builds
+- **Buildah Support**: Rootless container builds with efficient layer caching
+- **Incremental Builds**: Only rebuilds changed services in multi-module setup
+
 ## 🧪 Testing
 
 ### Populate Test Data
