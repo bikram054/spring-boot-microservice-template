@@ -79,19 +79,19 @@
           <stringProp name="HTTPSampler.domain"></stringProp>
           <stringProp name="HTTPSampler.port"></stringProp>
           <stringProp name="HTTPSampler.protocol"></stringProp>
-          <stringProp name="HTTPSampler.path">/user-service/api/users</stringProp>
+          <stringProp name="HTTPSampler.path">/users</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
 
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET user by id" enabled="true">
-          <stringProp name="HTTPSampler.path">/user-service/api/users/${userId}</stringProp>
+          <stringProp name="HTTPSampler.path">/users/${userId}</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
 
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST create user" enabled="true">
-          <stringProp name="HTTPSampler.path">/user-service/api/users</stringProp>
+          <stringProp name="HTTPSampler.path">/users</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
             <collectionProp name="Arguments.arguments"/>
@@ -104,7 +104,7 @@
         <hashTree/>
 
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT update user" enabled="true">
-          <stringProp name="HTTPSampler.path">/user-service/api/users/${userId}</stringProp>
+          <stringProp name="HTTPSampler.path">/users/${userId}</stringProp>
           <stringProp name="HTTPSampler.method">PUT</stringProp>
           <stringProp name="HTTPSampler.postBodyRaw">true</stringProp>
           <elementProp name="PostBodyRaw" elementType="BeanShellSampler">
@@ -114,7 +114,7 @@
         <hashTree/>
 
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE user" enabled="true">
-          <stringProp name="HTTPSampler.path">/user-service/api/users/${userId}</stringProp>
+          <stringProp name="HTTPSampler.path">/users/${userId}</stringProp>
           <stringProp name="HTTPSampler.method">DELETE</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
@@ -168,19 +168,19 @@
         <hashTree/>
 
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET all products" enabled="true">
-          <stringProp name="HTTPSampler.path">/product-service/api/products</stringProp>
+          <stringProp name="HTTPSampler.path">/products</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
 
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET product by id" enabled="true">
-          <stringProp name="HTTPSampler.path">/product-service/api/products/${productId}</stringProp>
+          <stringProp name="HTTPSampler.path">/products/${productId}</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
 
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST create product" enabled="true">
-          <stringProp name="HTTPSampler.path">/product-service/api/products</stringProp>
+          <stringProp name="HTTPSampler.path">/products</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <stringProp name="HTTPSampler.postBodyRaw">true</stringProp>
           <elementProp name="PostBodyRaw" elementType="BeanShellSampler">
@@ -190,7 +190,7 @@
         <hashTree/>
 
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT update product" enabled="true">
-          <stringProp name="HTTPSampler.path">/product-service/api/products/${productId}</stringProp>
+          <stringProp name="HTTPSampler.path">/products/${productId}</stringProp>
           <stringProp name="HTTPSampler.method">PUT</stringProp>
           <stringProp name="HTTPSampler.postBodyRaw">true</stringProp>
           <elementProp name="PostBodyRaw" elementType="BeanShellSampler">
@@ -200,7 +200,7 @@
         <hashTree/>
 
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE product" enabled="true">
-          <stringProp name="HTTPSampler.path">/product-service/api/products/${productId}</stringProp>
+          <stringProp name="HTTPSampler.path">/products/${productId}</stringProp>
           <stringProp name="HTTPSampler.method">DELETE</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
@@ -254,19 +254,19 @@
         <hashTree/>
 
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET all orders" enabled="true">
-          <stringProp name="HTTPSampler.path">/order-service/api/orders</stringProp>
+          <stringProp name="HTTPSampler.path">/orders</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
 
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET order by id" enabled="true">
-          <stringProp name="HTTPSampler.path">/order-service/api/orders/${orderId}</stringProp>
+          <stringProp name="HTTPSampler.path">/orders/${orderId}</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>
 
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST create order" enabled="true">
-          <stringProp name="HTTPSampler.path">/order-service/api/orders</stringProp>
+          <stringProp name="HTTPSampler.path">/orders</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <stringProp name="HTTPSampler.postBodyRaw">true</stringProp>
           <elementProp name="PostBodyRaw" elementType="BeanShellSampler">
@@ -276,7 +276,7 @@
         <hashTree/>
 
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE order" enabled="true">
-          <stringProp name="HTTPSampler.path">/order-service/api/orders/${orderId}</stringProp>
+          <stringProp name="HTTPSampler.path">/orders/${orderId}</stringProp>
           <stringProp name="HTTPSampler.method">DELETE</stringProp>
         </HTTPSamplerProxy>
         <hashTree/>

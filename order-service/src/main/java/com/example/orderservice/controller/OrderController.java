@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/orders")
+@RequestMapping("/orders")
 public class OrderController {
     private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
 
@@ -23,38 +23,38 @@ public class OrderController {
 
     @GetMapping
     public Page<OrderResponse> getAllOrders(Pageable pageable) {
-        logger.debug("GET /api/orders called with pagination");
+        logger.debug("GET /orders called with pagination");
         return orderService.getAllOrders(pageable);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long id) {
-        logger.debug("GET /api/orders/{} called", id);
+        logger.debug("GET /orders/{} called", id);
         return orderService.getOrderById(id)
                 .map(resp -> {
-                    logger.debug("GET /api/orders/{} found", id);
+                    logger.debug("GET /orders/{} found", id);
                     return ResponseEntity.ok(resp);
                 })
                 .orElseGet(() -> {
-                    logger.debug("GET /api/orders/{} not found", id);
+                    logger.debug("GET /orders/{} not found", id);
                     return ResponseEntity.notFound().build();
                 });
     }
 
     @PostMapping
     public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody OrderRequest orderRequest) {
-        logger.info("POST /api/orders create request for userId={} productId={} quantity={}",
+        logger.info("POST /orders create request for userId={} productId={} quantity={}",
                 orderRequest.userId(), orderRequest.productId(), orderRequest.quantity());
         OrderResponse resp = orderService.createOrder(orderRequest);
-        logger.info("POST /api/orders created id={}", resp.id());
+        logger.info("POST /orders created id={}", resp.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(resp);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
-        logger.info("DELETE /api/orders/{} called", id);
+        logger.info("DELETE /orders/{} called", id);
         orderService.deleteOrder(id);
-        logger.info("DELETE /api/orders/{} completed", id);
+        logger.info("DELETE /orders/{} completed", id);
         return ResponseEntity.noContent().build();
     }
 }

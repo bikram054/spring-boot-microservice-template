@@ -31,7 +31,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{gatewayBaseUrl}}/order-service/api/orders",
+              "raw": "{{gatewayBaseUrl}}/order-service/orders",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
@@ -65,7 +65,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{gatewayBaseUrl}}/order-service/api/orders/{{orderId}}",
+              "raw": "{{gatewayBaseUrl}}/order-service/orders/{{orderId}}",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
@@ -111,7 +111,7 @@
               "raw": "{\n  \"userId\": 1,\n  \"productId\": 1,\n  \"quantity\": 2\n}"
             },
             "url": {
-              "raw": "{{gatewayBaseUrl}}/order-service/api/orders",
+              "raw": "{{gatewayBaseUrl}}/order-service/orders",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
@@ -147,7 +147,7 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{gatewayBaseUrl}}/order-service/api/orders/{{orderIdToDelete}}",
+              "raw": "{{gatewayBaseUrl}}/order-service/orders/{{orderIdToDelete}}",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
@@ -183,7 +183,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{gatewayBaseUrl}}/product-service/api/products",
+              "raw": "{{gatewayBaseUrl}}/product-service/products",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
@@ -217,7 +217,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{gatewayBaseUrl}}/product-service/api/products/{{productId}}",
+              "raw": "{{gatewayBaseUrl}}/product-service/products/{{productId}}",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
@@ -263,7 +263,7 @@
               "raw": "{\n  \"name\": \"Example product\",\n  \"price\": 9.99,\n  \"stock\": 100\n}"
             },
             "url": {
-              "raw": "{{gatewayBaseUrl}}/product-service/api/products",
+              "raw": "{{gatewayBaseUrl}}/product-service/products",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
@@ -308,7 +308,7 @@
               "raw": "{\n  \"name\": \"Updated product\",\n  \"price\": 12.99,\n  \"stock\": 50\n}"
             },
             "url": {
-              "raw": "{{gatewayBaseUrl}}/product-service/api/products/{{productIdToUpdate}}",
+              "raw": "{{gatewayBaseUrl}}/product-service/products/{{productIdToUpdate}}",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
@@ -339,7 +339,7 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{gatewayBaseUrl}}/product-service/api/products/{{productIdToDelete}}",
+              "raw": "{{gatewayBaseUrl}}/product-service/products/{{productIdToDelete}}",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
@@ -375,7 +375,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{gatewayBaseUrl}}/user-service/api/users",
+              "raw": "{{gatewayBaseUrl}}/user-service/users",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
@@ -409,7 +409,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{gatewayBaseUrl}}/user-service/api/users/{{userId}}",
+              "raw": "{{gatewayBaseUrl}}/user-service/users/{{userId}}",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
@@ -455,7 +455,7 @@
               "raw": "{\n  \"name\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"phone\": \"555-1234\"\n}"
             },
             "url": {
-              "raw": "{{gatewayBaseUrl}}/user-service/api/users",
+              "raw": "{{gatewayBaseUrl}}/user-service/users",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
@@ -500,7 +500,7 @@
               "raw": "{\n  \"username\": \"updateduser\",\n  \"email\": \"updated@example.com\"\n}"
             },
             "url": {
-              "raw": "{{gatewayBaseUrl}}/user-service/api/users/{{userIdToUpdate}}",
+              "raw": "{{gatewayBaseUrl}}/user-service/users/{{userIdToUpdate}}",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],
@@ -531,7 +531,7 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{gatewayBaseUrl}}/user-service/api/users/{{userIdToDelete}}",
+              "raw": "{{gatewayBaseUrl}}/user-service/users/{{userIdToDelete}}",
               "host": [
                 "{{gatewayBaseUrl}}"
               ],

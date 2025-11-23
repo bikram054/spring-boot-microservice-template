@@ -46,4 +46,4 @@ logging:
       max-file-size: 10MB
       max-history: 5
   level:
-    com.example.productservice: DEBUG
+    com.example.productservice: INFO

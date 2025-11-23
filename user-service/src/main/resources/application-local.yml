@@ -46,5 +46,5 @@ logging:
       max-file-size: 10MB
       max-history: 5
   level:
-    com.example.userservice: DEBUG
+    com.example.userservice: INFO
     org.springframework.web: INFO

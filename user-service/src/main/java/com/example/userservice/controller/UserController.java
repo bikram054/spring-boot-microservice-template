@@ -18,7 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/users")
 public class UserController {
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
@@ -30,31 +30,31 @@ public class UserController {
 
     @GetMapping
     public Page<UserDto> getAllUsers(@NonNull Pageable pageable) {
-        logger.debug("GET /api/users called with pagination");
+        logger.debug("GET /users called with pagination");
         return userService.getAllUsers(pageable)
                 .map(userMapper::toDto);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUserById(@PathVariable @NonNull Long id) {
-        logger.debug("GET /api/users/{} called", id);
+        logger.debug("GET /users/{} called", id);
         return userService.getUserById(id)
                 .map(user -> {
-                    logger.debug("GET /api/users/{} found", id);
+                    logger.debug("GET /users/{} found", id);
                     return ResponseEntity.ok(userMapper.toDto(user));
                 })
                 .orElseGet(() -> {
-                    logger.debug("GET /api/users/{} not found", id);
+                    logger.debug("GET /users/{} not found", id);
                     return ResponseEntity.notFound().build();
                 });
     }
 
     @PostMapping
     public ResponseEntity<UserDto> createUser(@Valid @RequestBody CreateUserRequest request) {
-        logger.info("POST /api/users create name={} email={}", request.getName(), request.getEmail());
+        logger.info("POST /users create name={} email={}", request.getName(), request.getEmail());
         User user = userMapper.toEntity(request);
         User saved = userService.createUser(user);
-        logger.info("POST /api/users created id={}", saved.getId());
+        logger.info("POST /users created id={}", saved.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(userMapper.toDto(saved));
     }
 
@@ -65,10 +65,10 @@ public class UserController {
         try {
             User user = userMapper.toEntity(request);
             User replaced = userService.replaceUser(id, user);
-            logger.info("PUT /api/users/{} replaced", id);
+            logger.info("PUT /users/{} replaced", id);
             return ResponseEntity.ok(userMapper.toDto(replaced));
         } catch (RuntimeException e) {
-            logger.debug("PUT /api/users/{} not found", id);
+            logger.debug("PUT /users/{} not found", id);
             return ResponseEntity.notFound().build();
         }
     }
@@ -106,19 +106,19 @@ public class UserController {
                 tempUser.setPhone(request.getPhone());
 
             User updated = userService.updateUser(id, tempUser);
-            logger.info("PATCH /api/users/{} updated", id);
+            logger.info("PATCH /users/{} updated", id);
             return ResponseEntity.ok(userMapper.toDto(updated));
         } catch (RuntimeException e) {
-            logger.debug("PATCH /api/users/{} not found or invalid", id);
+            logger.debug("PATCH /users/{} not found or invalid", id);
             return ResponseEntity.notFound().build();
         }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable @NonNull Long id) {
-        logger.info("DELETE /api/users/{} called", id);
+        logger.info("DELETE /users/{} called", id);
         userService.deleteUser(id);
-        logger.info("DELETE /api/users/{} completed", id);
+        logger.info("DELETE /users/{} completed", id);
         return ResponseEntity.noContent().build();
     }
 }

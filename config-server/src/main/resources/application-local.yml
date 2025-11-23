@@ -27,4 +27,4 @@ logging:
       max-file-size: 10MB
       max-history: 5
   level:
-    org.springframework.cloud.config: DEBUG
+    org.springframework.cloud.config: INFO

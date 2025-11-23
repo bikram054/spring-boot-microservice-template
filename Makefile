@@ -25,8 +25,8 @@ clean:
 perf-test:
 	@echo "Running JMeter performance tests..."
 	docker run --rm --network ms_microservices-network \
-		-v $(PWD)/performance-tests:/tests \
-		-v $(PWD)/performance-tests/results:/results \
+		-v $(PWD)/tests/performance-tests:/tests \
+		-v $(PWD)/tests/performance-tests/results:/results \
 		alpine/jmeter:latest \
 		-n -t /tests/test-plan.jmx \
 		-l /results/results-$(shell date +%Y%m%d-%H%M%S).jtl \
@@ -38,7 +38,7 @@ perf-test:
 postman-test:
 	@echo "Running Postman tests via gateway..."
 	docker run --rm --network ms_microservices-network \
-		-v $(PWD)/postman:/etc/newman \
+		-v $(PWD)/tests/functional-tests:/etc/newman \
 		postman/newman:alpine \
 		run api-tests.postman_collection.json \
 		-e api-environment.postman_environment.json \

@@ -5,9 +5,9 @@ import time
 
 # Configuration
 GATEWAY_URL = "http://localhost:9090"
-USER_SERVICE_URL = f"{GATEWAY_URL}/user-service/api/users"
-PRODUCT_SERVICE_URL = f"{GATEWAY_URL}/product-service/api/products"
-ORDER_SERVICE_URL = f"{GATEWAY_URL}/order-service/api/orders"
+USER_SERVICE_URL = f"{GATEWAY_URL}/users"
+PRODUCT_SERVICE_URL = f"{GATEWAY_URL}/products"
+ORDER_SERVICE_URL = f"{GATEWAY_URL}/orders"
 
 NUM_USERS = 1000
 NUM_PRODUCTS = 10000
