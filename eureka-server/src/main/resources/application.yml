@@ -24,3 +24,28 @@ management:
   endpoint:
     health:
       show-details: always
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+logging:
+  level:
+    root: WARN
+    com.example: INFO
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+```

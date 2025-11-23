@@ -17,7 +17,17 @@ jobs:
       packages: write
     strategy:
       matrix:
-        service: [eureka-server, gateway-server, user-service, product-service, order-service]
+        include:
+          - service: eureka-server
+            port: 8761
+          - service: gateway-server
+            port: 8080
+          - service: user-service
+            port: 8081
+          - service: product-service
+            port: 8082
+          - service: order-service
+            port: 8083
     steps:
     - uses: actions/checkout@v4
     
@@ -37,9 +47,11 @@ jobs:
 
     - name: Build Native Image
       run: |
-        mvn clean spring-boot:build-image -Pnative -DskipTests -pl ${{ matrix.service }} \
-          -Dspring-boot.build-image.imageName=${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:latest \
-          -Dspring-boot.build-image.env.SPRING_PROFILES_ACTIVE=prod
+        docker build \
+          --build-arg SERVICE_NAME=${{ matrix.service }} \
+          --build-arg PORT=${{ matrix.port }} \
+          -t ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:latest \
+          -f Containerfile .
         
     - name: Push Docker image
       run: |

@@ -44,3 +44,22 @@ management:
   endpoint:
     health:
       show-details: always
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: none
+logging:
+  level:
+    root: WARN
+    com.example: INFO
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

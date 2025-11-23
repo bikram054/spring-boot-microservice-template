@@ -43,3 +43,6 @@ performance-tests/*.log
 
 # Config Repository
 config-repo/
+
+# Antigravity
+.gemini/

@@ -1,504 +1,342 @@
-# Microservices Deployment for Homelab
+# Spring Boot Microservices Template
 
-Run your Java microservices as an application in the Kubernetes cluster.
+A production-ready microservices architecture built with Spring Boot 3.5, Spring Cloud 2025.0.0, and GraalVM native image support.
 
 ## 🏗️ Architecture
 
-```
-microservices namespace
-├── eureka-server (port 8761)
-├── gateway-server (port 9090) ← Entry point
-├── user-service (port 8081)
-├── product-service (port 8082)
-└── order-service (port 8083)
-```
-
-## 📦 Directory Structure
+This project implements a microservices architecture with service discovery, API gateway, and multiple business services:
 
 ```
-microservices/
-├── deployment.yaml          # All microservices manifests
-├── service.yaml             # Service definitions
-├── config-map.yaml          # Application configuration
-├── docker-compose.yaml      # Local development (optional)
-└── README.md
+┌─────────────────────────────────────────────────────────────┐
+│                      API Gateway (8080)                      │
+│                     gateway-server                           │
+└──────────────┬──────────────────────────────────────────────┘
+               │
+               ├─────────────────────────────────────────┐
+               │                                         │
+       ┌───────▼────────┐                       ┌────────▼────────┐
+       │ Service Registry│                       │ Business Services│
+       │ eureka-server   │                       ├─────────────────┤
+       │   (8761)        │◄──────────────────────┤ user-service    │
+       └─────────────────┘                       │   (8081)        │
+                                                 │ product-service │
+                                                 │   (8082)        │
+                                                 │ order-service   │
+                                                 │   (8083)        │
+                                                 └─────────────────┘
 ```
 
-## 🚀 Deployment Steps
+### Services
 
-### Step 1: Build Docker Images
+- **eureka-server** (8761): Service discovery and registration
+- **gateway-server** (8080): API Gateway with routing and load balancing
+- **user-service** (8081): User management service
+- **product-service** (8082): Product catalog service
+- **order-service** (8083): Order processing service with circuit breaker
 
-**Locally (on your machine):**
+## 📦 Project Structure
+
+```
+.
+├── .github/
+│   └── workflows/
+│       └── native-build.yml       # CI/CD for native image builds
+├── eureka-server/                 # Service discovery
+├── gateway-server/                # API Gateway
+├── user-service/                  # User management
+├── product-service/               # Product catalog
+├── order-service/                 # Order processing
+├── k8s/                          # Kubernetes manifests
+│   ├── namespace.yaml
+│   ├── eureka-server.yaml
+│   ├── gateway-server.yaml
+│   ├── user-service.yaml
+│   ├── product-service.yaml
+│   └── order-service.yaml
+├── tests/                        # Test suites
+│   ├── functional-tests/         # Postman collections
+│   └── performance-tests/        # JMeter tests
+├── Containerfile                 # Generic native image build
+├── pom.xml                       # Parent POM with native profile
+├── Makefile                      # Build automation
+├── run-all.sh                    # Start all services locally
+├── stop-all.sh                   # Stop all services
+└── populate_data.py              # Test data population
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Java 21** (Temurin or similar)
+- **Maven 3.9+**
+- **Docker** (for containerized builds)
+- **GraalVM** (optional, for local native builds)
+
+### Local Development
+
+**Option 1: Run all services with Maven**
 ```bash
-cd /home/samanta/ms
+# Start all services with local profile
+./run-all.sh
 
-# Build all service images
-
-docker build -t eureka-server:latest ./eureka-server
-docker build -t gateway-server:latest ./gateway-server
-docker build -t user-service:latest ./user-service
-docker build -t product-service:latest ./product-service
-docker build -t order-service:latest ./order-service
+# Stop all services
+./stop-all.sh
 ```
 
-**Or on Raspberry Pi directly (for ARM):**
+**Option 2: Run individual services**
 ```bash
-# Ensure images are ARM-compatible
-# Use buildx for multi-platform builds
+# Build all services
+mvn clean package -DskipTests
 
+# Start Eureka first
+cd eureka-server && mvn spring-boot:run &
+
+# Wait for Eureka, then start other services
+cd user-service && mvn spring-boot:run &
+cd product-service && mvn spring-boot:run &
+cd order-service && mvn spring-boot:run &
+cd gateway-server && mvn spring-boot:run &
 ```
 
-### Step 2: Push Images to Registry
-
-**Option A: Local Registry (Recommended for Homelab)**
+**Option 3: Using Makefile**
 ```bash
-# Start local registry on Raspberry Pi
-docker run -d -p 5000:5000 --restart always --name registry registry:2
-
-# Tag images for local registry
-
-docker tag eureka-server:latest localhost:5000/eureka-server:latest
-# ... tag all services
-
-# Push to local registry
-
-docker push localhost:5000/eureka-server:latest
-# ... push all services
+make build      # Build all services
+make up         # Start with Docker Compose
+make down       # Stop services
+make logs       # View logs
+make status     # Check status
 ```
 
-**Option B: Docker Hub**
+### Access Services
+
+- **Eureka Dashboard**: http://localhost:8761
+- **API Gateway**: http://localhost:8080
+- **Users API**: http://localhost:8080/users
+- **Products API**: http://localhost:8080/products
+- **Orders API**: http://localhost:8080/orders
+
+## 🔨 Building Native Images
+
+This project supports GraalVM native image compilation for faster startup and lower memory footprint.
+
+### Using GitHub Actions (Recommended)
+
+The project includes automated CI/CD for native image builds:
+
+- **Workflow**: `.github/workflows/native-build.yml`
+- **Triggers**: Push to `main` or pull requests
+- **Output**: Native images pushed to `ghcr.io`
+- **Build time**: ~5-10 minutes per service
+
+### Local Native Build
+
+**Build with Maven native profile:**
 ```bash
-# Tag for Docker Hub
+# Build native executable for a specific service
+mvn -Pnative native:compile -pl user-service -DskipTests
 
-docker tag eureka-server:latest <username>/eureka-server:latest
-# ... tag all services
-
-# Login and push
-docker login
-
-docker push <username>/eureka-server:latest
-# ... push all services
+# Run the native executable
+./user-service/target/user-service
 ```
 
-### Step 3: Create Kubernetes Manifests
+**Build with Docker (using Containerfile):**
+```bash
+# Build native image for a specific service
+docker build \
+  --build-arg SERVICE_NAME=user-service \
+  --build-arg PORT=8081 \
+  -t user-service:native \
+  -f Containerfile .
 
-Create `homelab/microservices/deployment.yaml`:
-
-```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: microservices
-
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: microservices-config
-  namespace: microservices
-data:
-
-  
-  # Eureka Server
-  eureka.instance.hostname: "eureka-server"
-  eureka.port: "8761"
-  
-  # Services
-  spring.application.name: "microservices"
-
-
-
----
-# Eureka Server
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: eureka-server
-  namespace: microservices
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: eureka-server
-  template:
-    metadata:
-      labels:
-        app: eureka-server
-    spec:
-      containers:
-      - name: eureka-server
-        image: localhost:5000/eureka-server:latest
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8761
-        env:
-        - name: JAVA_OPTS
-          value: "-Xmx256m -Xms128m"
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "200m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8761
-          initialDelaySeconds: 60
-          periodSeconds: 10
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: eureka-server
-  namespace: microservices
-spec:
-  selector:
-    app: eureka-server
-  ports:
-  - port: 8761
-    targetPort: 8761
-  type: ClusterIP
-
----
-# Gateway Server
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: gateway-server
-  namespace: microservices
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: gateway-server
-  template:
-    metadata:
-      labels:
-        app: gateway-server
-    spec:
-      containers:
-      - name: gateway-server
-        image: localhost:5000/gateway-server:latest
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 9090
-        env:
-        - name: JAVA_OPTS
-          value: "-Xmx256m -Xms128m"
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "200m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 9090
-          initialDelaySeconds: 60
-          periodSeconds: 10
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: gateway-server
-  namespace: microservices
-spec:
-  selector:
-    app: gateway-server
-  ports:
-  - port: 9090
-    targetPort: 9090
-  type: ClusterIP
-
----
-# User Service
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: user-service
-  namespace: microservices
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: user-service
-  template:
-    metadata:
-      labels:
-        app: user-service
-    spec:
-      containers:
-      - name: user-service
-        image: localhost:5000/user-service:latest
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8081
-        env:
-        - name: JAVA_OPTS
-          value: "-Xmx256m -Xms128m"
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "150m"
-          limits:
-            memory: "512Mi"
-            cpu: "400m"
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: user-service
-  namespace: microservices
-spec:
-  selector:
-    app: user-service
-  ports:
-  - port: 8081
-    targetPort: 8081
-  type: ClusterIP
-
----
-# Product Service
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: product-service
-  namespace: microservices
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: product-service
-  template:
-    metadata:
-      labels:
-        app: product-service
-    spec:
-      containers:
-      - name: product-service
-        image: localhost:5000/product-service:latest
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8082
-        env:
-        - name: JAVA_OPTS
-          value: "-Xmx256m -Xms128m"
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "150m"
-          limits:
-            memory: "512Mi"
-            cpu: "400m"
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: product-service
-  namespace: microservices
-spec:
-  selector:
-    app: product-service
-  ports:
-  - port: 8082
-    targetPort: 8082
-  type: ClusterIP
-
----
-# Order Service
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: order-service
-  namespace: microservices
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: order-service
-  template:
-    metadata:
-      labels:
-        app: order-service
-    spec:
-      containers:
-      - name: order-service
-        image: localhost:5000/order-service:latest
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8083
-        env:
-        - name: JAVA_OPTS
-          value: "-Xmx256m -Xms128m"
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "150m"
-          limits:
-            memory: "512Mi"
-            cpu: "400m"
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: order-service
-  namespace: microservices
-spec:
-  selector:
-    app: order-service
-  ports:
-  - port: 8083
-    targetPort: 8083
-  type: ClusterIP
+# Build all services
+for service in eureka-server gateway-server user-service product-service order-service; do
+  case $service in
+    eureka-server) port=8761 ;;
+    gateway-server) port=8080 ;;
+    user-service) port=8081 ;;
+    product-service) port=8082 ;;
+    order-service) port=8083 ;;
+  esac
+  docker build \
+    --build-arg SERVICE_NAME=$service \
+    --build-arg PORT=$port \
+    -t $service:native \
+    -f Containerfile .
+done
 ```
 
-### Step 4: Create Ingress
+### Native Image Benefits
 
-Create `homelab/microservices/ingress.yaml`:
+- **Startup Time**: ~0.1s vs ~3-5s (JVM)
+- **Memory Usage**: ~50-100MB vs ~200-400MB (JVM)
+- **Image Size**: ~100-150MB vs ~300-500MB (JVM)
 
-```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: microservices-ingress
-  namespace: microservices
-  annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-spec:
-  ingressClassName: nginx
-  tls:
-  - hosts:
-    - api.yourdomain.com
-    - yourdomain.com
-    secretName: microservices-tls
-  rules:
-  - host: api.yourdomain.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: gateway-server
-            port:
-              number: 9090
-  - host: yourdomain.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: gateway-server
-            port:
-              number: 9090
+## 🧪 Testing
+
+### Populate Test Data
+```bash
+python3 populate_data.py
 ```
 
-### Step 5: Deploy to Kubernetes
+### Run Functional Tests (Postman)
+```bash
+make postman-test
+```
+
+### Run Performance Tests (JMeter)
+```bash
+make perf-test
+```
+
+## ☸️ Kubernetes Deployment
+
+### Deploy to Kubernetes
 
 ```bash
-cd /home/samanta/ms/homelab
+# Create namespace
+kubectl apply -f k8s/namespace.yaml
 
-# Generate certificates
-./generate-tls-cert.sh api.yourdomain.com microservices microservices
-
-# Deploy microservices
-sudo k0s kubectl apply -f microservices/deployment.yaml
-sudo k0s kubectl apply -f microservices/ingress.yaml
+# Deploy all services
+kubectl apply -f k8s/
 
 # Verify deployment
-sudo k0s kubectl get all -n microservices
-sudo k0s kubectl logs -n microservices -f deployment/gateway-server
+kubectl get all -n microservices
+
+# Check logs
+kubectl logs -n microservices -l app=gateway-server -f
 ```
 
-### Step 6: Access Services
+### Using Native Images from GitHub Container Registry
 
-**Locally:**
+Update image references in `k8s/*.yaml`:
+```yaml
+image: ghcr.io/<your-username>/<repo>/user-service:latest
+```
+
+### Resource Requirements
+
+**Native Images (Recommended):**
+```yaml
+resources:
+  requests:
+    memory: "128Mi"
+    cpu: "100m"
+  limits:
+    memory: "256Mi"
+    cpu: "300m"
+```
+
+**JVM Images:**
+```yaml
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "200m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+```
+
+## 🔧 Configuration
+
+### Profiles
+
+- **default**: Local development with H2 database
+- **prod**: Production configuration (used in native builds)
+
+### Environment Variables
+
 ```bash
-# Set port forwarding
-sudo ./setup-ingress-portforward.sh &
+# Eureka connection
+EUREKA_URI=http://eureka-server:8761/eureka/
 
-# Add to /etc/hosts
-echo "127.0.0.1 microservices.local" | sudo tee -a /etc/hosts
-
-# Access
-https://microservices.local
+# Spring profiles
+SPRING_PROFILES_ACTIVE=prod
 ```
-
-**From Internet (after domain setup):**
-```
-https://api.yourdomain.com
-https://yourdomain.com
-
-# Access individual services (via gateway)
-https://api.yourdomain.com/user-service
-https://api.yourdomain.com/product-service
-https://api.yourdomain.com/order-service
-```
-
----
 
 ## 📊 Monitoring
 
+### Health Checks
 ```bash
-# View all microservices
-sudo k0s kubectl get all -n microservices
+# Check service health
+curl http://localhost:8080/actuator/health
 
-# Check specific service
-sudo k0s kubectl describe deployment gateway-server -n microservices
+# Eureka dashboard
+open http://localhost:8761
+```
+
+### Kubernetes Monitoring
+```bash
+# View all services
+kubectl get all -n microservices
+
+# Check pod status
+kubectl describe pod <pod-name> -n microservices
 
 # View logs
-sudo k0s kubectl logs -n microservices -f deployment/gateway-server
+kubectl logs -n microservices -f deployment/gateway-server
 
 # Resource usage
-sudo k0s kubectl top pods -n microservices
-
-# Service endpoints
-sudo k0s kubectl get svc -n microservices -o wide
+kubectl top pods -n microservices
 ```
 
----
+## 🐛 Troubleshooting
 
-## 🔧 Troubleshooting
+### Service Discovery Issues
+```bash
+# Check Eureka registration
+curl http://localhost:8761/eureka/apps
 
-### Pod not starting?
+# Verify service can reach Eureka
+kubectl exec -it <pod-name> -n microservices -- curl http://eureka-server:8761/actuator/health
+```
+
+### Native Image Build Failures
+
+**Issue**: Missing reflection configuration
+```bash
+# Add to native-image.properties or use @RegisterReflectionForBinding
+```
+
+**Issue**: Out of memory during build
+```bash
+# Increase Docker memory limit to 8GB+
+```
+
+### Pod CrashLoopBackOff
 ```bash
 # Check events
-sudo k0s kubectl describe pod <pod-name> -n microservices
+kubectl describe pod <pod-name> -n microservices
 
-# Check logs
-sudo k0s kubectl logs <pod-name> -n microservices
+# View logs
+kubectl logs <pod-name> -n microservices --previous
+
+# Common fixes:
+# 1. Increase initialDelaySeconds in liveness probe
+# 2. Check EUREKA_URI environment variable
+# 3. Verify image pull secrets
 ```
 
-### Out of memory?
-```bash
-# Reduce JAVA_OPTS in deployment
-JAVA_OPTS="-Xmx128m -Xms64m"
+## 🤝 Contributing
 
-# Or increase Raspberry Pi swap:
-sudo dphys-swapfile swapoff
-sudo sed -i 's/CONF_SWAPSIZE=100/CONF_SWAPSIZE=2048/g' /etc/dphys-swapfile
-sudo dphys-swapfile setup
-sudo dphys-swapfile swapon
-```
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-### Services not communicating?
-```bash
-# Test service-to-service communication
-sudo k0s kubectl exec -it <pod-name> -n microservices -- bash
-curl http://eureka-server:8761/actuator/health
-```
+## 📝 License
+
+This project is licensed under the MIT License.
+
+## 🔗 Related Resources
+
+- [Spring Boot Documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/)
+- [Spring Cloud Documentation](https://spring.io/projects/spring-cloud)
+- [GraalVM Native Image](https://www.graalvm.org/latest/reference-manual/native-image/)
+- [Kubernetes Documentation](https://kubernetes.io/docs/)
 
 ---
 
-**Your microservices are now part of your homelab! 🚀**
+**Built with ❤️ using Spring Boot and GraalVM**
