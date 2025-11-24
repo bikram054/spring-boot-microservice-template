@@ -47,6 +47,15 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Set Containerfile path
+      id: containerfile
+      run: |
+        if [ "${{ matrix.service }}" = "eureka-server" ]; then
+          echo "path=Containerfile.eureka-jvm" >> $GITHUB_OUTPUT
+        else
+          echo "path=Containerfile" >> $GITHUB_OUTPUT
+        fi
+
     - name: Build Native Image
       env:
         DOCKER_BUILDKIT: 1
@@ -57,7 +66,7 @@ jobs:
           --cache-from type=gha \
           --cache-to type=gha,mode=max \
           -t ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:latest \
-          -f Containerfile .
+          -f ${{ steps.containerfile.outputs.path }} .
         
     - name: Push Docker image
       run: |

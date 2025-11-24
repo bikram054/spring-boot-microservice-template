@@ -1,0 +1,18 @@
+# JVM-based Containerfile for Eureka Server
+# This uses a regular JVM build instead of native image to avoid reflection issues
+
+FROM eclipse-temurin:21-jdk AS builder
+WORKDIR /app
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+COPY . .
+RUN chmod +x mvnw
+RUN --mount=type=cache,target=/root/.m2/repository \
+    ./mvnw clean package -pl eureka-server -DskipTests
+
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=builder /app/eureka-server/target/eureka-server-*.jar app.jar
+EXPOSE 8761
+ENV JAVA_OPTS="-Xmx256m -Xms128m"
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
