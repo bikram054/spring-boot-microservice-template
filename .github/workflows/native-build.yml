@@ -164,31 +164,23 @@ jobs:
           echo "path=Containerfile" >> $GITHUB_OUTPUT
         fi
 
-    - name: Build Image
+    - name: Build and Push Image
+      uses: docker/build-push-action@v5
       if: steps.should-build.outputs.should_build == 'true'
-      env:
-        DOCKER_BUILDKIT: 1
-      run: |
-        # Add shared cache for native services
-        CACHE_ARGS=""
-        if [ "${{ matrix.service }}" != "eureka-server" ]; then
-          CACHE_ARGS="--cache-from type=gha,scope=common-native-deps"
-        fi
-        
-        docker build \
-          --build-arg SERVICE_NAME=${{ matrix.service }} \
-          --build-arg PORT=${{ matrix.port }} \
-          $CACHE_ARGS \
-          --cache-from type=gha,scope=${{ matrix.service }} \
-          --cache-to type=gha,mode=max,scope=${{ matrix.service }} \
-          --cache-from type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:latest \
-          -t ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:latest \
-          -f ${{ steps.containerfile.outputs.path }} .
-        
-    - name: Push Docker image
-      if: steps.should-build.outputs.should_build == 'true'
-      run: |
-        docker push ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:latest
+      with:
+        context: .
+        file: ${{ steps.containerfile.outputs.path }}
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:latest
+        build-args: |
+          SERVICE_NAME=${{ matrix.service }}
+          PORT=${{ matrix.port }}
+        # Use shared cache for native services, isolated for eureka
+        cache-from: |
+          type=gha,scope=${{ matrix.service }}
+          ${{ matrix.service != 'eureka-server' && 'type=gha,scope=common-native-deps' || '' }}
+          type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:latest
+        cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 
   cleanup-old-versions:
     needs: build-native
