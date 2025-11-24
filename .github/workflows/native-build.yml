@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       services:
-        description: 'Services to build (comma-separated: eureka-server,gateway-server,user-service,product-service,order-service or "all")'
+        description: 'Services to build (comma-separated: gateway-server,user-service,product-service,order-service or "all")'
         required: false
         default: 'all'
 
@@ -23,7 +23,6 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      eureka: ${{ steps.filter.outputs.eureka }}
       gateway: ${{ steps.filter.outputs.gateway }}
       user: ${{ steps.filter.outputs.user }}
       product: ${{ steps.filter.outputs.product }}
@@ -36,8 +35,6 @@ jobs:
         id: filter
         with:
           filters: |
-            eureka:
-              - 'eureka-server/**'
             gateway:
               - 'gateway-server/**'
             user:
@@ -49,7 +46,6 @@ jobs:
             common:
               - 'pom.xml'
               - 'Containerfile'
-              - 'Containerfile.eureka-jvm'
               - '.github/workflows/**'
 
   # Build shared dependencies for native services
@@ -86,8 +82,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - service: eureka-server
-            port: 8761
           - service: gateway-server
             port: 8080
           - service: user-service
@@ -117,8 +111,6 @@ jobs:
         elif [ "${{ needs.detect-changes.outputs.common }}" = "true" ]; then
           SHOULD_BUILD="true"
         # Check service-specific changes
-        elif [ "${{ matrix.service }}" = "eureka-server" ] && [ "${{ needs.detect-changes.outputs.eureka }}" = "true" ]; then
-          SHOULD_BUILD="true"
         elif [ "${{ matrix.service }}" = "gateway-server" ] && [ "${{ needs.detect-changes.outputs.gateway }}" = "true" ]; then
           SHOULD_BUILD="true"
         elif [ "${{ matrix.service }}" = "user-service" ] && [ "${{ needs.detect-changes.outputs.user }}" = "true" ]; then
@@ -154,31 +146,22 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Set Containerfile path
-      if: steps.should-build.outputs.should_build == 'true'
-      id: containerfile
-      run: |
-        if [ "${{ matrix.service }}" = "eureka-server" ]; then
-          echo "path=Containerfile.eureka-jvm" >> $GITHUB_OUTPUT
-        else
-          echo "path=Containerfile" >> $GITHUB_OUTPUT
-        fi
+
 
     - name: Build and Push Image
       uses: docker/build-push-action@v5
       if: steps.should-build.outputs.should_build == 'true'
       with:
         context: .
-        file: ${{ steps.containerfile.outputs.path }}
+        file: Containerfile
         push: true
         tags: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:latest
         build-args: |
           SERVICE_NAME=${{ matrix.service }}
           PORT=${{ matrix.port }}
-        # Use shared cache for native services, isolated for eureka
         cache-from: |
           type=gha,scope=${{ matrix.service }}
-          ${{ matrix.service != 'eureka-server' && 'type=gha,scope=common-native-deps' || '' }}
+          type=gha,scope=common-native-deps
           type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:latest
         cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 
@@ -189,7 +172,7 @@ jobs:
       packages: write
     strategy:
       matrix:
-        service: [eureka-server, gateway-server, user-service, product-service, order-service]
+        service: [gateway-server, user-service, product-service, order-service]
     steps:
       - name: Delete old package versions
         uses: actions/delete-package-versions@v5

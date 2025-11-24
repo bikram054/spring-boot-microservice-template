@@ -4,31 +4,24 @@ A production-ready microservices architecture built with Spring Boot 3.5, Spring
 
 ## 🏗️ Architecture
 
-This project implements a microservices architecture with service discovery, API gateway, and multiple business services:
+This project implements a microservices architecture with API gateway and multiple business services:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                      API Gateway (8080)                      │
-│                     gateway-server                           │
+│                     traefik                                 │
 └──────────────┬──────────────────────────────────────────────┘
                │
-               ├─────────────────────────────────────────┐
-               │                                         │
-       ┌───────▼────────┐                       ┌────────▼────────┐
-       │ Service Registry│                       │ Business Services│
-       │ eureka-server   │                       ├─────────────────┤
-       │   (8761)        │◄──────────────────────┤ user-service    │
-       └─────────────────┘                       │   (8081)        │
-                                                 │ product-service │
-                                                 │   (8082)        │
-                                                 │ order-service   │
-                                                 │   (8083)        │
-                                                 └─────────────────┘
+               ├──────────────┬──────────────┬─────────────┐
+               │              │              │             │
+       ┌───────▼────────┐ ┌──▼───────────┐ ┌▼──────────┐ ┌▼────────────┐
+       │ user-service   │ │product-service│ │order-service│ │   ...more   │
+       │   (8081)       │ │   (8082)      │ │   (8083)   │ │  services   │
+       └────────────────┘ └───────────────┘ └────────────┘ └─────────────┘
 ```
 
 ### Services
 
-- **eureka-server** (8761): Service discovery and registration
 - **gateway-server** (8080): API Gateway with routing and load balancing
 - **user-service** (8081): User management service
 - **product-service** (8082): Product catalog service
@@ -44,14 +37,12 @@ This project implements a microservices architecture with service discovery, API
 ├── .github/
 │   └── workflows/
 │       └── native-build.yml       # CI/CD for native image builds
-├── eureka-server/                 # Service discovery
 ├── gateway-server/                # API Gateway
 ├── user-service/                  # User management
 ├── product-service/               # Product catalog
 ├── order-service/                 # Order processing
 ├── k8s/                          # Kubernetes manifests
 │   ├── namespace.yaml
-│   ├── eureka-server.yaml
 │   ├── gateway-server.yaml
 │   ├── user-service.yaml
 │   ├── product-service.yaml
@@ -93,10 +84,7 @@ This project implements a microservices architecture with service discovery, API
 # Build all services
 mvn clean package -DskipTests
 
-# Start Eureka first
-cd eureka-server && mvn spring-boot:run &
-
-# Wait for Eureka, then start other services
+# Start all services
 cd user-service && mvn spring-boot:run &
 cd product-service && mvn spring-boot:run &
 cd order-service && mvn spring-boot:run &
@@ -105,22 +93,19 @@ cd gateway-server && mvn spring-boot:run &
 
 **Option 3: Using Makefile**
 ```bash
-make build            # Build all services (Maven)
-make build-native     # Build single native image (requires SERVICE=name)
-make build-native-all # Build all native images
-make deploy           # Deploy to k0s (local images)
-make deploy-remote    # Deploy to k0s (remote images from ghcr.io)
-make pull-images      # Pre-pull remote images
-make update-images    # Update running deployments
-make undeploy         # Remove from k0s
-make logs             # View logs (default: gateway-server)
-make status           # Check pod status
-make k8s-status       # Detailed k8s status
+make build          # Build all services (Maven)
+make deploy         # Deploy to k0s (local images)
+make deploy-remote  # Deploy to k0s (remote images from ghcr.io)
+make pull-images    # Pre-pull remote images
+make update-images  # Update running deployments
+make undeploy       # Remove from k0s
+make logs           # View logs (default: gateway-server)
+make status         # Check pod status
+make k8s-status     # Detailed k8s status
 ```
 
 ### Access Services
 
-- **Eureka Dashboard**: http://localhost:8761
 - **API Gateway**: http://localhost:8080
 - **Users API**: http://localhost:8080/users
 - **Products API**: http://localhost:8080/products
@@ -148,38 +133,6 @@ mvn -Pnative native:compile -pl user-service -DskipTests
 
 # Run the native executable
 ./user-service/target/user-service
-```
-
-**Build with Buildah (using Containerfile):**
-```bash
-# Build native image for a specific service
-make build-native SERVICE=user-service
-
-# Or manually with buildah
-buildah bud \
-  --build-arg SERVICE_NAME=user-service \
-  --build-arg PORT=8081 \
-  -t user-service:native \
-  -f Containerfile .
-
-# Build all services
-make build-native-all
-
-# Or manually
-for service in eureka-server gateway-server user-service product-service order-service; do
-  case $service in
-    eureka-server) port=8761 ;;
-    gateway-server) port=8080 ;;
-    user-service) port=8081 ;;
-    product-service) port=8082 ;;
-    order-service) port=8083 ;;
-  esac
-  buildah bud \
-    --build-arg SERVICE_NAME=$service \
-    --build-arg PORT=$port \
-    -t $service:native \
-    -f Containerfile .
-done
 ```
 
 ### Native Image Benefits
@@ -221,9 +174,6 @@ The easiest way to deploy is using prebuilt native images from GitHub Container 
 ```bash
 # Deploy using remote images from ghcr.io/bikram054/ms
 make deploy-remote
-
-# Or use the deployment script directly
-./deploy-remote.sh
 ```
 
 This will:
@@ -247,9 +197,6 @@ make undeploy         # Remove all services
 If you've built images locally:
 
 ```bash
-# Build native images first
-make build-native-all
-
 # Deploy to k0s
 make deploy
 ```
@@ -261,30 +208,7 @@ sudo k0s kubectl apply -f k8s/namespace.yaml
 sudo k0s kubectl apply -f k8s/
 
 # Verify deployment
-EUREKA_PORT=$(sudo k0s kubectl get svc eureka-server -n ms -o jsonpath='{.spec.ports[0].nodePort}') k0s kubectl logs -n ms -l app=gateway-server -f
-```
-
-### Using Private GitHub Container Registry
-
-If your packages are private, create an image pull secret:
-
-```bash
-# Run the setup script
-./setup-image-pull-secret.sh
-
-# Or manually create the secret
-sudo k0s kubectl create secret docker-registry ghcr-secret \
-  --docker-server=ghcr.io \
-  --docker-username=<your-github-username> \
-  --docker-password=<your-github-token> \
-  --namespace=ms
-```
-
-Then add to your deployment specs:
-```yaml
-spec:
-  imagePullSecrets:
-  - name: ghcr-secret
+sudo k0s kubectl logs -n ms -l app=gateway-server -f
 ```
 
 ### Resource Requirements
@@ -321,9 +245,6 @@ resources:
 ### Environment Variables
 
 ```bash
-# Eureka connection
-EUREKA_URI=http://eureka-server:8761/eureka/
-
 # Spring profiles
 SPRING_PROFILES_ACTIVE=prod
 ```
@@ -334,9 +255,6 @@ SPRING_PROFILES_ACTIVE=prod
 ```bash
 # Check service health
 curl http://localhost:8080/actuator/health
-
-# Eureka dashboard
-open http://localhost:8761
 ```
 
 ### Kubernetes Monitoring (k0s)
@@ -385,14 +303,7 @@ make update-images
 sudo k0s kubectl rollout restart deployment --all -n ms
 ```
 
-### Service Discovery Issues
-```bash
-# Check Eureka registration
-curl http://localhost:8761/eureka/apps
 
-# Verify service can reach Eureka
-sudo k0s kubectl exec -it <pod-name> -n ms -- curl http://eureka-server:8761/actuator/health
-```
 
 ### Native Image Build Failures
 
@@ -416,8 +327,7 @@ sudo k0s kubectl logs <pod-name> -n ms --previous
 
 # Common fixes:
 # 1. Increase initialDelaySeconds in liveness probe
-# 2. Check EUREKA_URI environment variable
-# 3. Verify image pull secrets (if using private registry)
+# 2. Verify image pull secrets (if using private registry)
 ```
 
 ## 🤝 Contributing

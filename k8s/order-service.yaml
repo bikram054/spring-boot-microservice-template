@@ -15,10 +15,13 @@ spec:
     spec:
       containers:
       - name: order-service
-        image: ghcr.io/bikram054/ms/order-service:latest
+        image: order-service:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8083
+        env:
+        - name: JAVA_TOOL_OPTIONS
+          value: "-XX:TieredStopAtLevel=1 -Xmx256m"
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
@@ -34,10 +37,6 @@ spec:
             port: 8083
           initialDelaySeconds: 5
           periodSeconds: 2
-      initContainers:
-      - name: wait-for-eureka
-        image: busybox:1.35
-        command: ['sh', '-c', 'until nc -z eureka-server 8761; do sleep 2; done']
 ---
 apiVersion: v1
 kind: Service

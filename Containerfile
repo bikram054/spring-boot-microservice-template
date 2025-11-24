@@ -6,7 +6,6 @@ ENV LANG=C.UTF-8
 COPY pom.xml mvnw ./
 COPY .mvn .mvn
 # Download parent POM and all module POMs
-COPY eureka-server/pom.xml eureka-server/
 COPY gateway-server/pom.xml gateway-server/
 COPY user-service/pom.xml user-service/
 COPY product-service/pom.xml product-service/
@@ -16,7 +15,7 @@ RUN chmod +x mvnw
 RUN ./mvnw dependency:go-offline -DskipTests || true
 
 # Stage 2: Build native image with cached dependencies
-FROM ghcr.io/graalvm/native-image-community:21 AS builder
+FROM ghcr.io/graalvm/native-image-community:21 AS native-builder
 ARG SERVICE_NAME
 ARG PORT
 WORKDIR /app
@@ -30,12 +29,32 @@ RUN chmod +x mvnw
 # Build native image (dependencies already cached)
 RUN ./mvnw -Pnative native:compile -pl ${SERVICE_NAME} -DskipTests
 
-# Stage 3: Runtime image
-FROM ubuntu:noble
+# Stage 3: Native Runtime image
+FROM ubuntu:noble AS native-runtime
 ARG SERVICE_NAME
 ARG PORT
 WORKDIR /app
-COPY --from=builder /app/${SERVICE_NAME}/target/${SERVICE_NAME} .
+COPY --from=native-builder /app/${SERVICE_NAME}/target/${SERVICE_NAME} .
 EXPOSE ${PORT}
 ENV SERVICE_NAME=${SERVICE_NAME}
 ENTRYPOINT ["/bin/sh", "-c", "/app/$SERVICE_NAME"]
+
+# Stage 4: Build JVM image with cached dependencies
+FROM ghcr.io/graalvm/native-image-community:21 AS jvm-builder
+ARG SERVICE_NAME
+WORKDIR /app
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+COPY --from=deps /root/.m2 /root/.m2
+COPY . .
+RUN chmod +x mvnw
+RUN ./mvnw package -pl ${SERVICE_NAME} -DskipTests
+
+# Stage 5: JVM Runtime image
+FROM eclipse-temurin:21-jre AS jvm-runtime
+ARG SERVICE_NAME
+ARG PORT
+WORKDIR /app
+COPY --from=jvm-builder /app/${SERVICE_NAME}/target/*.jar app.jar
+EXPOSE ${PORT}
+ENTRYPOINT ["java", "-jar", "app.jar"]

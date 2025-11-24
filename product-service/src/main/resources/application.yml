@@ -17,13 +17,10 @@ spring:
   h2:
     console:
       enabled: true
-
-eureka:
-  client:
-    service-url:
-      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
-  instance:
-    prefer-ip-address: true
+  cloud:
+    kubernetes:
+      discovery:
+        enabled: true
 
 management:
   endpoints:
