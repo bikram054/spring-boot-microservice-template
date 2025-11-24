@@ -36,6 +36,15 @@ jobs:
       with:
         java-version: '21'
         distribution: 'temurin'
+        cache: 'maven'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
         
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -56,15 +65,16 @@ jobs:
           echo "path=Containerfile" >> $GITHUB_OUTPUT
         fi
 
-    - name: Build Native Image
+    - name: Build Image
       env:
         DOCKER_BUILDKIT: 1
       run: |
         docker build \
           --build-arg SERVICE_NAME=${{ matrix.service }} \
           --build-arg PORT=${{ matrix.port }} \
-          --cache-from type=gha \
-          --cache-to type=gha,mode=max \
+          --cache-from type=gha,scope=${{ matrix.service }} \
+          --cache-to type=gha,mode=max,scope=${{ matrix.service }} \
+          --cache-from type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:latest \
           -t ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}:latest \
           -f ${{ steps.containerfile.outputs.path }} .
         
