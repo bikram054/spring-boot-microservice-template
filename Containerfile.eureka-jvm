@@ -1,15 +1,30 @@
-# JVM-based Containerfile for Eureka Server
-# This uses a regular JVM build instead of native image to avoid reflection issues
+# Stage 1: Download dependencies (cached separately)
+FROM eclipse-temurin:21-jdk AS deps
+WORKDIR /app
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+COPY pom.xml mvnw ./
+COPY .mvn .mvn
+# Download parent POM and eureka-server POM
+COPY eureka-server/pom.xml eureka-server/
+RUN chmod +x mvnw
+# Download all dependencies (this layer will be cached)
+RUN ./mvnw dependency:go-offline -pl eureka-server -DskipTests || true
 
+# Stage 2: Build JAR with cached dependencies
 FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /app
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
+# Copy Maven dependencies from deps stage
+COPY --from=deps /root/.m2 /root/.m2
+# Copy source code
 COPY . .
 RUN chmod +x mvnw
-RUN --mount=type=cache,target=/root/.m2/repository \
-    ./mvnw clean package -pl eureka-server -DskipTests
+# Build JAR (dependencies already cached)
+RUN ./mvnw clean package -pl eureka-server -DskipTests
 
+# Stage 3: Runtime image
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=builder /app/eureka-server/target/eureka-server-*.jar app.jar
