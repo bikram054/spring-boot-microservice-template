@@ -13,8 +13,7 @@ COPY product-service/pom.xml product-service/
 COPY order-service/pom.xml order-service/
 RUN chmod +x mvnw
 # Download all dependencies (this layer will be cached)
-RUN --mount=type=cache,target=/root/.m2/repository \
-    ./mvnw dependency:go-offline -DskipTests || true
+RUN ./mvnw dependency:go-offline -DskipTests || true
 
 # Stage 2: Build native image with cached dependencies
 FROM ghcr.io/graalvm/native-image-community:21 AS builder
@@ -29,8 +28,7 @@ COPY --from=deps /root/.m2 /root/.m2
 COPY . .
 RUN chmod +x mvnw
 # Build native image (dependencies already cached)
-RUN --mount=type=cache,target=/root/.m2/repository \
-    ./mvnw -Pnative native:compile -pl ${SERVICE_NAME} -DskipTests
+RUN ./mvnw -Pnative native:compile -pl ${SERVICE_NAME} -DskipTests
 
 # Stage 3: Runtime image
 FROM ubuntu:noble
