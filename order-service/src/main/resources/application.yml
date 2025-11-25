@@ -21,6 +21,9 @@ spring:
     kubernetes:
       discovery:
         enabled: true
+        # Disable reactive client as this is a servlet app
+        reactive:
+          enabled: false
 
 user:
   service:
