@@ -11,7 +11,7 @@ COPY product-service/pom.xml product-service/
 COPY order-service/pom.xml order-service/
 RUN chmod +x mvnw
 # Download all dependencies (this layer will be cached)
-RUN ./mvnw -B -T 1C dependency:go-offline -DskipTests -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn || true
+RUN ./mvnw -B -T 1C -Pnative dependency:go-offline -DskipTests -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn || true
 
 # Stage 2: Build native image with cached dependencies
 FROM ghcr.io/graalvm/native-image-community:21 AS native-builder
