@@ -63,7 +63,8 @@
         <!-- Kubernetes Native Service Discovery -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-kubernetes-discoveryclient</artifactId>
+            <artifactId>spring-cloud-starter-kubernetes-client-discovery</artifactId>
+            <version>3.1.6</version>
         </dependency>
 
 
