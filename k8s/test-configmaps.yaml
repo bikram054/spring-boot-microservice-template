@@ -1,0 +1,951 @@
+apiVersion: v1
+data:
+  orders.csv: |
+    userId,productId,quantity,orderId
+    1,1,2,1
+    2,2,1,2
+    3,3,5,3
+  products.csv: |
+    name,description,price,productId
+    Widget,Small widget,9.99,1
+    Gadget,Useful gadget,19.99,2
+    Doohickey,Handy doohickey,4.99,3
+  test-plan.jmx: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <jmeterTestPlan version="1.2" properties="5.0" jmeter="5.5">
+      <hashTree>
+        <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="API Performance Test Plan" enabled="true">
+          <stringProp name="TestPlan.comments"></stringProp>
+          <boolProp name="TestPlan.functional_mode">false</boolProp>
+          <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+          <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" enabled="true">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+          <stringProp name="TestPlan.user_define_classpath"></stringProp>
+        </TestPlan>
+        <hashTree>
+
+          <!-- Thread Group: Users -->
+          <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Users Thread Group" enabled="true">
+            <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+            <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController">
+              <boolProp name="LoopController.continue_forever">false</boolProp>
+              <intProp name="LoopController.loops">50</intProp>
+            </elementProp>
+            <intProp name="ThreadGroup.num_threads">20</intProp>
+            <intProp name="ThreadGroup.ramp_time">10</intProp>
+            <longProp name="ThreadGroup.start_time">0</longProp>
+            <longProp name="ThreadGroup.end_time">0</longProp>
+            <boolProp name="ThreadGroup.scheduler">false</boolProp>
+          </ThreadGroup>
+          <hashTree>
+            <!-- CSV for users -->
+            <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="Users CSV Data Set" enabled="true">
+              <stringProp name="filename">${__P(testdir,.)}/data/users.csv</stringProp>
+              <stringProp name="fileEncoding"></stringProp>
+              <boolProp name="ignoreFirstLine">false</boolProp>
+              <stringProp name="delimiter">,</stringProp>
+              <boolProp name="recycle">true</boolProp>
+              <boolProp name="stopThread">false</boolProp>
+              <stringProp name="shareMode">shareMode_all</stringProp>
+            </CSVDataSet>
+            <hashTree/>
+
+            <!-- Think Time -->
+            <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Uniform Random Timer" enabled="true">
+              <stringProp name="ConstantTimer.delay">300</stringProp>
+              <stringProp name="RandomTimer.range">200</stringProp>
+            </UniformRandomTimer>
+            <hashTree/>
+
+            <!-- HTTP Authorization Manager -->
+            <AuthManager guiclass="AuthPanel" testclass="AuthManager" testname="HTTP Authorization Manager" enabled="true">
+              <collectionProp name="AuthManager.auth_list">
+                <elementProp name="" elementType="Authorization">
+                  <stringProp name="Authorization.url">http://${__P(gateway.host,localhost)}:${__P(gateway.port,30836)}</stringProp>
+                  <stringProp name="Authorization.username">${__P(auth.username,admin)}</stringProp>
+                  <stringProp name="Authorization.password">${__P(auth.password,password)}</stringProp>
+                  <stringProp name="Authorization.domain"></stringProp>
+                  <stringProp name="Authorization.realm"></stringProp>
+                </elementProp>
+              </collectionProp>
+            </AuthManager>
+            <hashTree/>
+
+            <!-- HTTP Header Manager -->
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="JSON Header" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="Content-Type" elementType="Header">
+                  <stringProp name="Header.name">Content-Type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+
+            <!-- HTTP Samplers for users -->
+            <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="User HTTP Defaults" enabled="true">
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments">
+                <collectionProp name="Arguments.arguments"/>
+              </elementProp>
+              <stringProp name="HTTPSampler.domain">${__P(gateway.host,localhost)}</stringProp>
+              <stringProp name="HTTPSampler.port">${__P(gateway.port,30836)}</stringProp>
+              <stringProp name="HTTPSampler.protocol">http</stringProp>
+              <stringProp name="HTTPSampler.path"></stringProp>
+            </ConfigTestElement>
+            <hashTree/>
+
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET all users" enabled="true">
+              <stringProp name="HTTPSampler.domain"></stringProp>
+              <stringProp name="HTTPSampler.port"></stringProp>
+              <stringProp name="HTTPSampler.protocol"></stringProp>
+              <stringProp name="HTTPSampler.path">/users</stringProp>
+              <stringProp name="HTTPSampler.method">GET</stringProp>
+            </HTTPSamplerProxy>
+            <hashTree/>
+
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET user by id" enabled="true">
+              <stringProp name="HTTPSampler.path">/users/${userId}</stringProp>
+              <stringProp name="HTTPSampler.method">GET</stringProp>
+            </HTTPSamplerProxy>
+            <hashTree/>
+
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST create user" enabled="true">
+              <stringProp name="HTTPSampler.path">/users</stringProp>
+              <stringProp name="HTTPSampler.method">POST</stringProp>
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">{"name":"${name}","email":"${email}","phone":"${phone}"}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+            </HTTPSamplerProxy>
+            <hashTree/>
+
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT update user" enabled="true">
+              <stringProp name="HTTPSampler.path">/users/${userId}</stringProp>
+              <stringProp name="HTTPSampler.method">PUT</stringProp>
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">{"name":"${name}_updated","email":"${email}","phone":"${phone}"}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+            </HTTPSamplerProxy>
+            <hashTree/>
+
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE user" enabled="true">
+              <stringProp name="HTTPSampler.path">/users/${userId}</stringProp>
+              <stringProp name="HTTPSampler.method">DELETE</stringProp>
+            </HTTPSamplerProxy>
+            <hashTree/>
+          </hashTree>
+
+          <!-- Thread Group: Products -->
+          <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Products Thread Group" enabled="true">
+            <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+            <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController">
+              <boolProp name="LoopController.continue_forever">false</boolProp>
+              <intProp name="LoopController.loops">50</intProp>
+            </elementProp>
+            <intProp name="ThreadGroup.num_threads">20</intProp>
+            <intProp name="ThreadGroup.ramp_time">10</intProp>
+          </ThreadGroup>
+          <hashTree>
+            <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="Products CSV Data Set" enabled="true">
+              <stringProp name="filename">${__P(testdir,.)}/data/products.csv</stringProp>
+              <stringProp name="fileEncoding"></stringProp>
+              <boolProp name="ignoreFirstLine">false</boolProp>
+              <stringProp name="delimiter">,</stringProp>
+              <boolProp name="recycle">true</boolProp>
+              <boolProp name="stopThread">false</boolProp>
+              <stringProp name="shareMode">shareMode_all</stringProp>
+            </CSVDataSet>
+            <hashTree/>
+
+            <!-- HTTP Authorization Manager -->
+            <AuthManager guiclass="AuthPanel" testclass="AuthManager" testname="HTTP Authorization Manager" enabled="true">
+              <collectionProp name="AuthManager.auth_list">
+                <elementProp name="" elementType="Authorization">
+                  <stringProp name="Authorization.url">http://${__P(gateway.host,localhost)}:${__P(gateway.port,30836)}</stringProp>
+                  <stringProp name="Authorization.username">${__P(auth.username,admin)}</stringProp>
+                  <stringProp name="Authorization.password">${__P(auth.password,password)}</stringProp>
+                  <stringProp name="Authorization.domain"></stringProp>
+                  <stringProp name="Authorization.realm"></stringProp>
+                </elementProp>
+              </collectionProp>
+            </AuthManager>
+            <hashTree/>
+
+            <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="Product HTTP Defaults" enabled="true">
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments">
+                <collectionProp name="Arguments.arguments"/>
+              </elementProp>
+              <stringProp name="HTTPSampler.domain">${__P(gateway.host,localhost)}</stringProp>
+              <stringProp name="HTTPSampler.port">${__P(gateway.port,30836)}</stringProp>
+              <stringProp name="HTTPSampler.protocol">http</stringProp>
+              <stringProp name="HTTPSampler.path"></stringProp>
+            </ConfigTestElement>
+            <hashTree/>
+
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET all products" enabled="true">
+              <stringProp name="HTTPSampler.path">/products</stringProp>
+              <stringProp name="HTTPSampler.method">GET</stringProp>
+            </HTTPSamplerProxy>
+            <hashTree/>
+
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET product by id" enabled="true">
+              <stringProp name="HTTPSampler.path">/products/${productId}</stringProp>
+              <stringProp name="HTTPSampler.method">GET</stringProp>
+            </HTTPSamplerProxy>
+            <hashTree/>
+
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST create product" enabled="true">
+              <stringProp name="HTTPSampler.path">/products</stringProp>
+              <stringProp name="HTTPSampler.method">POST</stringProp>
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">{"name":"${name}","description":"${description}","price":${price}}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+            </HTTPSamplerProxy>
+            <hashTree/>
+
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT update product" enabled="true">
+              <stringProp name="HTTPSampler.path">/products/${productId}</stringProp>
+              <stringProp name="HTTPSampler.method">PUT</stringProp>
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">{"name":"${name}_updated","description":"${description}","price":${price}}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+            </HTTPSamplerProxy>
+            <hashTree/>
+
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE product" enabled="true">
+              <stringProp name="HTTPSampler.path">/products/${productId}</stringProp>
+              <stringProp name="HTTPSampler.method">DELETE</stringProp>
+            </HTTPSamplerProxy>
+            <hashTree/>
+          </hashTree>
+
+          <!-- Thread Group: Orders -->
+          <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Orders Thread Group" enabled="true">
+            <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+            <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController">
+              <boolProp name="LoopController.continue_forever">false</boolProp>
+              <intProp name="LoopController.loops">50</intProp>
+            </elementProp>
+            <intProp name="ThreadGroup.num_threads">20</intProp>
+            <intProp name="ThreadGroup.ramp_time">10</intProp>
+          </ThreadGroup>
+          <hashTree>
+            <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="Orders CSV Data Set" enabled="true">
+              <stringProp name="filename">${__P(testdir,.)}/data/orders.csv</stringProp>
+              <stringProp name="fileEncoding"></stringProp>
+              <boolProp name="ignoreFirstLine">false</boolProp>
+              <stringProp name="delimiter">,</stringProp>
+              <boolProp name="recycle">true</boolProp>
+              <boolProp name="stopThread">false</boolProp>
+              <stringProp name="shareMode">shareMode_all</stringProp>
+            </CSVDataSet>
+            <hashTree/>
+
+            <!-- HTTP Authorization Manager -->
+            <AuthManager guiclass="AuthPanel" testclass="AuthManager" testname="HTTP Authorization Manager" enabled="true">
+              <collectionProp name="AuthManager.auth_list">
+                <elementProp name="" elementType="Authorization">
+                  <stringProp name="Authorization.url">http://${__P(gateway.host,localhost)}:${__P(gateway.port,30836)}</stringProp>
+                  <stringProp name="Authorization.username">${__P(auth.username,admin)}</stringProp>
+                  <stringProp name="Authorization.password">${__P(auth.password,password)}</stringProp>
+                  <stringProp name="Authorization.domain"></stringProp>
+                  <stringProp name="Authorization.realm"></stringProp>
+                </elementProp>
+              </collectionProp>
+            </AuthManager>
+            <hashTree/>
+
+            <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="Order HTTP Defaults" enabled="true">
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments">
+                <collectionProp name="Arguments.arguments"/>
+              </elementProp>
+              <stringProp name="HTTPSampler.domain">${__P(gateway.host,localhost)}</stringProp>
+              <stringProp name="HTTPSampler.port">${__P(gateway.port,30836)}</stringProp>
+              <stringProp name="HTTPSampler.protocol">http</stringProp>
+              <stringProp name="HTTPSampler.path"></stringProp>
+            </ConfigTestElement>
+            <hashTree/>
+
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET all orders" enabled="true">
+              <stringProp name="HTTPSampler.path">/orders</stringProp>
+              <stringProp name="HTTPSampler.method">GET</stringProp>
+            </HTTPSamplerProxy>
+            <hashTree/>
+
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET order by id" enabled="true">
+              <stringProp name="HTTPSampler.path">/orders/${orderId}</stringProp>
+              <stringProp name="HTTPSampler.method">GET</stringProp>
+            </HTTPSamplerProxy>
+            <hashTree/>
+
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST create order" enabled="true">
+              <stringProp name="HTTPSampler.path">/orders</stringProp>
+              <stringProp name="HTTPSampler.method">POST</stringProp>
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">{"userId":${userId},"productId":${productId},"quantity":${quantity}}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+            </HTTPSamplerProxy>
+            <hashTree/>
+
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE order" enabled="true">
+              <stringProp name="HTTPSampler.path">/orders/${orderId}</stringProp>
+              <stringProp name="HTTPSampler.method">DELETE</stringProp>
+            </HTTPSamplerProxy>
+            <hashTree/>
+          </hashTree>
+
+        </hashTree>
+      </hashTree>
+    </jmeterTestPlan>
+  users.csv: |
+    name,email,phone,userId
+    Alice,alice@example.com,555-0101,1
+    Bob,bob@example.com,555-0102,2
+    Carol,carol@example.com,555-0103,3
+kind: ConfigMap
+metadata:
+  name: jmeter-tests
+  namespace: ms
+---
+apiVersion: v1
+data:
+  api-environment.postman_environment.json: |-
+    {
+      "id": "ms-api-environment",
+      "name": "MS API Env (Gateway)",
+      "values": [
+        {
+          "key": "gatewayBaseUrl",
+          "value": "http://localhost:30836",
+          "enabled": true
+        },
+        {
+          "key": "orderId",
+          "value": "1",
+          "enabled": true
+        },
+        {
+          "key": "orderIdToDelete",
+          "value": "1",
+          "enabled": true
+        },
+        {
+          "key": "productId",
+          "value": "1",
+          "enabled": true
+        },
+        {
+          "key": "productIdToUpdate",
+          "value": "1",
+          "enabled": true
+        },
+        {
+          "key": "productIdToDelete",
+          "value": "1",
+          "enabled": true
+        },
+        {
+          "key": "userId",
+          "value": "1",
+          "enabled": true
+        },
+        {
+          "key": "userIdToUpdate",
+          "value": "1",
+          "enabled": true
+        },
+        {
+          "key": "userIdToDelete",
+          "value": "1",
+          "enabled": true
+        },
+        {
+          "key": "authUsername",
+          "value": "admin",
+          "enabled": true
+        },
+        {
+          "key": "authPassword",
+          "value": "admin123",
+          "enabled": true
+        }
+      ],
+      "timestamp": 0,
+      "_postman_variable_scope": "environment",
+      "_postman_exported_at": "2025-11-15T00:00:00.000Z",
+      "_postman_exported_using": "Postman/Unknown"
+    }
+  api-tests.postman_collection.json: |-
+    {
+      "info": {
+        "name": "MS API Tests",
+        "_postman_id": "ms-api-tests-collection",
+        "description": "Collection of API tests targeting all services through the gateway.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+      },
+      "variable": [],
+      "auth": {
+        "type": "basic",
+        "basic": [
+          {
+            "key": "username",
+            "value": "{{authUsername}}",
+            "type": "string"
+          },
+          {
+            "key": "password",
+            "value": "{{authPassword}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Orders",
+          "item": [
+            {
+              "name": "GET Orders (list)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/orders",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "orders"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test('Response is JSON array', function() {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json.content).to.be.an('array');",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "GET Order by ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/orders/{{orderId}}",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{orderId}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200 or 404', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                      "});",
+                      "pm.test('If 200, response has id', function() {",
+                      "  if (pm.response.code === 200) {",
+                      "    var json = pm.response.json();",
+                      "    pm.expect(json).to.have.property('id');",
+                      "  }",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Create Order",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"userId\": 1,\n  \"productId\": 1,\n  \"quantity\": 2\n}"
+                },
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/orders",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "orders"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 201 or 400', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([201, 400]);",
+                      "});",
+                      "pm.test('If 201, response has id', function() {",
+                      "  if (pm.response.code === 201) {",
+                      "    var json = pm.response.json();",
+                      "    pm.expect(json).to.have.property('id');",
+                      "  }",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "DELETE Order",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/orders/{{orderIdToDelete}}",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{orderIdToDelete}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200 or 204 or 404', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Products",
+          "item": [
+            {
+              "name": "GET Products (list)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/products",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "products"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test('Response is JSON array', function() {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json.content).to.be.an('array');",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "GET Product by ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/products/{{productId}}",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "products",
+                    "{{productId}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200 or 404', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                      "});",
+                      "pm.test('If 200, response has id', function() {",
+                      "  if (pm.response.code === 200) {",
+                      "    var json = pm.response.json();",
+                      "    pm.expect(json).to.have.property('id');",
+                      "  }",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Create Product",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Example product\",\n  \"price\": 9.99,\n  \"stock\": 100\n}"
+                },
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/products",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "products"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 201 or 400', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([201, 400]);",
+                      "});",
+                      "pm.test('If 201, response has id', function() {",
+                      "  if (pm.response.code === 201) {",
+                      "    var json = pm.response.json();",
+                      "    pm.expect(json).to.have.property('id');",
+                      "  }",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "PUT Update Product",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated product\",\n  \"price\": 12.99,\n  \"stock\": 50\n}"
+                },
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/products/{{productIdToUpdate}}",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "products",
+                    "{{productIdToUpdate}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200 or 400 or 404', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([200, 400, 404]);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "DELETE Product",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/products/{{productIdToDelete}}",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "products",
+                    "{{productIdToDelete}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200 or 204 or 404', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Users",
+          "item": [
+            {
+              "name": "GET Users (list)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/users",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "users"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test('Response is JSON array', function() {",
+                      "  var json = pm.response.json();",
+                      "  pm.expect(json.content).to.be.an('array');",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "GET User by ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/users/{{userId}}",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{userId}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200 or 404', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                      "});",
+                      "pm.test('If 200, response has id', function() {",
+                      "  if (pm.response.code === 200) {",
+                      "    var json = pm.response.json();",
+                      "    pm.expect(json).to.have.property('id');",
+                      "  }",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "POST Create User",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"phone\": \"555-1234\"\n}"
+                },
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/users",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "users"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 201 or 400', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([201, 400]);",
+                      "});",
+                      "pm.test('If 201, response has id', function() {",
+                      "  if (pm.response.code === 201) {",
+                      "    var json = pm.response.json();",
+                      "    pm.expect(json).to.have.property('id');",
+                      "  }",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "PUT Update User",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"updateduser\",\n  \"email\": \"updated@example.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/users/{{userIdToUpdate}}",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{userIdToUpdate}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200 or 400 or 404', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([200, 400, 404]);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "DELETE User",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/users/{{userIdToDelete}}",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{userIdToDelete}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200 or 204 or 404', function () {",
+                      "  pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+kind: ConfigMap
+metadata:
+  name: newman-tests
+  namespace: ms

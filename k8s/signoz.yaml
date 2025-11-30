@@ -1,42 +1,4 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: zookeeper
-  namespace: ms
-  labels:
-    app: zookeeper
-spec:
-  ports:
-  - port: 2181
-    name: client
-  selector:
-    app: zookeeper
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: zookeeper
-  namespace: ms
-  labels:
-    app: zookeeper
-spec:
-  selector:
-    matchLabels:
-      app: zookeeper
-  template:
-    metadata:
-      labels:
-        app: zookeeper
-    spec:
-      containers:
-      - name: zookeeper
-        image: zookeeper:3.9
-        ports:
-        - containerPort: 2181
-        env:
-        - name: ZOO_4LW_COMMANDS_WHITELIST
-          value: "*"
----
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -71,7 +33,7 @@ spec:
     spec:
       containers:
       - name: clickhouse
-        image: clickhouse/clickhouse-server:24.3
+        image: clickhouse/clickhouse-server:25.5.6
         ports:
         - containerPort: 8123
         - containerPort: 9000
@@ -85,10 +47,14 @@ spec:
         - name: clickhouse-config
           mountPath: /etc/clickhouse-server/users.xml
           subPath: users.xml
+        - name: clickhouse-data
+          mountPath: /var/lib/clickhouse
       volumes:
       - name: clickhouse-config
         configMap:
           name: clickhouse-config
+      - name: clickhouse-data
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -136,10 +102,28 @@ data:
         </remote_servers>
         <zookeeper>
             <node>
-                <host>zookeeper</host>
-                <port>2181</port>
+                <host>127.0.0.1</host>
+                <port>9181</port>
             </node>
         </zookeeper>
+        <keeper_server>
+            <tcp_port>9181</tcp_port>
+            <server_id>1</server_id>
+            <log_storage_path>/var/lib/clickhouse/coordination/log</log_storage_path>
+            <snapshot_storage_path>/var/lib/clickhouse/coordination/snapshots</snapshot_storage_path>
+            <coordination_settings>
+                <operation_timeout_ms>10000</operation_timeout_ms>
+                <session_timeout_ms>30000</session_timeout_ms>
+                <raft_logs_level>warning</raft_logs_level>
+            </coordination_settings>
+            <raft_configuration>
+                <server>
+                    <id>1</id>
+                    <hostname>127.0.0.1</hostname>
+                    <port>9444</port>
+                </server>
+            </raft_configuration>
+        </keeper_server>
         <distributed_ddl>
             <path>/clickhouse/task_queue/ddl</path>
         </distributed_ddl>
@@ -152,9 +136,10 @@ data:
         </profiles>
         <users>
             <default>
-                <password_sha256_hex>2363a050d8baa4c7f94e6c4bd58edc112e336f58815f1417a73967c9535e40dc</password_sha256_hex>
+                <password>signoz</password>
                 <networks>
                     <ip>::/0</ip>
+                    <ip>0.0.0.0/0</ip>
                 </networks>
                 <profile>default</profile>
                 <quota>default</quota>
@@ -163,6 +148,7 @@ data:
                 <password_sha256_hex>2363a050d8baa4c7f94e6c4bd58edc112e336f58815f1417a73967c9535e40dc</password_sha256_hex>
                 <networks>
                     <ip>::/0</ip>
+                    <ip>0.0.0.0/0</ip>
                 </networks>
                 <profile>default</profile>
                 <quota>default</quota>
@@ -183,10 +169,12 @@ metadata:
     app: signoz
 spec:
   ports:
-  - port: 3301
-    name: ui
-  - port: 8080
-    name: api
+  - name: ui
+    port: 3301
+    targetPort: 8080
+  - name: api
+    port: 8080
+    targetPort: 8080
   selector:
     app: signoz
 ---
@@ -208,13 +196,13 @@ spec:
     spec:
       containers:
       - name: signoz
-        image: signoz/signoz:v0.84.0
+        image: signoz/signoz:v0.103.0
         ports:
         - containerPort: 3301
         - containerPort: 8080
         env:
-        - name: ClickHouseUrl
-          value: "tcp://clickhouse:9000?username=default&password=signoz"
+        - name: SIGNOZ_TELEMETRYSTORE_CLICKHOUSE_DSN
+          value: "tcp://clickhouse:9000?username=otel&password=signoz"
         - name: STORAGE
           value: "clickhouse"
         - name: GIGABYTES_OF_FREE_DISK_REQUIRED
@@ -260,7 +248,7 @@ spec:
     spec:
       containers:
       - name: otel-collector
-        image: signoz/signoz-otel-collector:0.102.1
+        image: signoz/signoz-otel-collector:v0.129.12
         ports:
         - containerPort: 4317
         - containerPort: 4318
@@ -285,7 +273,9 @@ data:
       otlp:
         protocols:
           grpc:
+            endpoint: 0.0.0.0:4317
           http:
+            endpoint: 0.0.0.0:4318
     processors:
       batch:
     exporters:
@@ -293,8 +283,8 @@ data:
         datasource: tcp://otel:signoz@clickhouse:9000/signoz_traces
       clickhouselogsexporter:
         dsn: tcp://otel:signoz@clickhouse:9000/signoz_logs
-      clickhousemetricswrite:
-        endpoint: tcp://otel:signoz@clickhouse:9000/signoz_metrics
+      signozclickhousemetrics:
+        dsn: tcp://otel:signoz@clickhouse:9000/signoz_metrics
     service:
       pipelines:
         traces:
@@ -304,7 +294,7 @@ data:
         metrics:
           receivers: [otlp]
           processors: [batch]
-          exporters: [clickhousemetricswrite]
+          exporters: [signozclickhousemetrics]
         logs:
           receivers: [otlp]
           processors: [batch]

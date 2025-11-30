@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
       - name: jmeter
-        image: justb4/jmeter:5.5
+        image: alpine/jmeter:latest
         command: ["/bin/sh", "-c"]
         args:
           - |
@@ -21,7 +21,7 @@ spec:
             
             echo "Running JMeter test..."
             jmeter -n -t /tests/test-plan.jmx \
-              -Jgateway.host=traefik \
+              -Jgateway.host=nginx-ingress-controller \
               -Jgateway.port=80 \
               -Jtestdir=/tests \
               -l /tests/results.jtl

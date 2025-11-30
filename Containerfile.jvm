@@ -1,0 +1,28 @@
+# Stage 1: Build JVM image
+FROM docker.io/eclipse-temurin:21-jdk AS builder
+ARG SERVICE_NAME
+WORKDIR /app
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+
+COPY . .
+RUN chmod +x mvnw
+
+# Build the specific service
+# Maven dependencies will be available from mounted volume
+RUN ./mvnw package -pl ${SERVICE_NAME} -DskipTests
+
+# Stage 2: JVM Runtime image
+FROM docker.io/eclipse-temurin:21-jre
+ARG SERVICE_NAME
+ARG PORT
+WORKDIR /app
+
+# Download OpenTelemetry Java agent
+ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.10.0/opentelemetry-javaagent.jar /app/opentelemetry-javaagent.jar
+
+COPY --from=builder /app/${SERVICE_NAME}/target/*.jar app.jar
+EXPOSE ${PORT}
+
+# Use OTEL agent with the application
+ENTRYPOINT ["java", "-javaagent:/app/opentelemetry-javaagent.jar", "-jar", "app.jar"]

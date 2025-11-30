@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: signoz-ingress
+  namespace: ms
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /signoz(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: signoz
+                port:
+                  number: 3301

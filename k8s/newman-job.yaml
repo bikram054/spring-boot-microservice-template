@@ -9,7 +9,7 @@ spec:
       containers:
       - name: newman
         image: postman/newman:alpine
-        command: ["newman", "run", "/etc/newman/api-tests.postman_collection.json", "-e", "/etc/newman/api-environment.postman_environment.json", "--env-var", "gatewayBaseUrl=http://traefik"]
+        command: ["newman", "run", "/etc/newman/api-tests.postman_collection.json", "-e", "/etc/newman/api-environment.postman_environment.json", "--env-var", "gatewayBaseUrl=http://nginx-ingress-controller"]
         volumeMounts:
         - name: test-config
           mountPath: /etc/newman
